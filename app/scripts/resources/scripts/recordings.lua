@@ -130,6 +130,9 @@
 				recording_name = "temp_"..session:get_uuid().."."..record_ext;
 			end
 
+		--set the temporary recording name
+			temp_recording_name = "temp_"..session:get_uuid().."."..record_ext;
+
 		--prompt for the recording
 			session:execute("playback", "phrase:voicemail_record_greeting");
 			session:execute("sleep", "500");
@@ -146,96 +149,25 @@
 
 				--record the file to the file system
 					-- syntax is session:recordFile(file_name, max_len_secs, silence_threshold, silence_secs);
-					session:execute("record", recordings_dir .."/".. recording_name);
+					session:execute("record", recordings_dir .."/".. temp_recording_name);
 
 				--show the storage type
 					freeswitch.consoleLog("notice", "[recordings] ".. storage_type .. "\n");
 
 				--read file content as base64 string
-					recording_base64 = assert(file.read_base64(recordings_dir .. "/" .. recording_name));
+					recording_base64 = assert(file.read_base64(recordings_dir .. "/" .. temp_recording_name));
 
 			elseif (storage_type == "http_cache") then
 				freeswitch.consoleLog("notice", "[recordings] ".. storage_type .. " ".. storage_path .."\n");
-				session:execute("record", storage_path .."/"..recording_name);
+				session:execute("record", storage_path .."/"..temp_recording_name);
 			else
 				freeswitch.consoleLog("notice", "[recordings] ".. storage_type .. " ".. recordings_dir .."\n");
 				-- record,Record File,<path> [<time_limit_secs>] [<silence_thresh>] [<silence_hits>]
-				session:execute("record", "'"..recordings_dir.."/"..recording_name.."' "..time_limit_secs.." "..silence_thresh.." "..silence_hits);
-			end
-
-		--setup the database connection
-			local Database = require "resources.functions.database";
-			local db = dbh or Database.new('system');
-
-		--get the description of the previous recording
-			sql = "SELECT recording_description FROM v_recordings ";
-			sql = sql .. "where domain_uuid = :domain_uuid ";
-			sql = sql .. "and recording_filename = :recording_name ";
-			sql = sql .. "limit 1";
-			local params = {domain_uuid = domain_uuid, recording_name = recording_name};
-			local recording_description = db:first_value(sql, params) or ''
-
-		--delete the previous recording
-			sql = "delete from v_recordings ";
-			sql = sql .. "where domain_uuid = :domain_uuid ";
-			sql = sql .. "and recording_filename = :recording_name";
-			db:query(sql, {domain_uuid = domain_uuid, recording_name = recording_name});
-
-		--get a new uuid
-			recording_uuid = api:execute("create_uuid");
-
-		--save the message to the voicemail messages
-			local array = {}
-			table.insert(array, "INSERT INTO v_recordings ");
-			table.insert(array, "(");
-			table.insert(array, "recording_uuid, ");
-			table.insert(array, "domain_uuid, ");
-			table.insert(array, "recording_filename, ");
-			table.insert(array, "recording_description, ");
-			if (storage_type == "base64") then
-				table.insert(array, "recording_base64, ");
-			end
-			table.insert(array, "recording_name ");
-			table.insert(array, ") ");
-			table.insert(array, "VALUES ");
-			table.insert(array, "( ");
-			table.insert(array, ":recording_uuid, ");
-			table.insert(array, ":domain_uuid, ");
-			table.insert(array, ":recording_name, ");
-			table.insert(array, ":recording_description, ");
-			if (storage_type == "base64") then
-				table.insert(array, ":recording_base64, ");
-			end
-			table.insert(array, ":recording_name ");
-			table.insert(array, ") ");
-			sql = table.concat(array, "\n");
-
-			local params = {
-				recording_uuid = recording_uuid;
-				domain_uuid = domain_uuid;
-				recording_name = recording_name;
-				recording_description = recording_description;
-				recording_base64 = recording_base64;
-			};
-
-			if (debug["sql"]) then
-				freeswitch.consoleLog("notice", "[recording] SQL: " .. sql .. "; params: " .. json.encode(params) .. "\n");
-			end
-
-			if (storage_type == "base64") then
-				local Database = require "resources.functions.database"
-				local dbh = Database.new('system', 'base64');
-				dbh:query(sql, params);
-				dbh:release();
-			else
-				--setup the database connection
-				local Database = require "resources.functions.database";
-				local db = dbh or Database.new('system');
-				db:query(sql, params);
+				session:execute("record", "'"..recordings_dir.."/"..temp_recording_name.."' "..time_limit_secs.." "..silence_thresh.." "..silence_hits);
 			end
 
 		--preview the recording
-			session:streamFile(recordings_dir.."/"..recording_name);
+			session:streamFile(recordings_dir.."/"..temp_recording_name);
 
 		--approve the recording, to save the recording press 1 to re-record press 2
 			min_digits="0" max_digits="1" max_tries = "1"; digit_timeout = "100";
@@ -267,13 +199,109 @@
 			end
 
 			if (digits == "1") then
+				
+				--setup the database connection
+					local Database = require "resources.functions.database";
+					local db = dbh or Database.new('system');
+
+				--get the description of the previous recording
+					sql = "SELECT recording_description FROM v_recordings ";
+					sql = sql .. "where domain_uuid = :domain_uuid ";
+					sql = sql .. "and recording_filename = :recording_name ";
+					sql = sql .. "limit 1";
+					local params = {domain_uuid = domain_uuid, recording_name = recording_name};
+					local recording_description = db:first_value(sql, params) or ''
+
+				--delete the previous recording
+					sql = "delete from v_recordings ";
+					sql = sql .. "where domain_uuid = :domain_uuid ";
+					sql = sql .. "and recording_filename = :recording_name";
+					db:query(sql, {domain_uuid = domain_uuid, recording_name = recording_name});
+					
+				--delete the temp recording
+					sql = "delete from v_recordings ";
+					sql = sql .. "where domain_uuid = :domain_uuid ";
+					sql = sql .. "and recording_filename = :recording_name";
+					db:query(sql, {domain_uuid = domain_uuid, recording_name = temp_recording_name});
+
+				--get a new uuid
+					recording_uuid = api:execute("create_uuid");
+
+				--save the message to the voicemail messages
+					local array = {}
+					table.insert(array, "INSERT INTO v_recordings ");
+					table.insert(array, "(");
+					table.insert(array, "recording_uuid, ");
+					table.insert(array, "domain_uuid, ");
+					table.insert(array, "recording_filename, ");
+					table.insert(array, "recording_description, ");
+					if (storage_type == "base64") then
+						table.insert(array, "recording_base64, ");
+					end
+					table.insert(array, "recording_name ");
+					table.insert(array, ") ");
+					table.insert(array, "VALUES ");
+					table.insert(array, "( ");
+					table.insert(array, ":recording_uuid, ");
+					table.insert(array, ":domain_uuid, ");
+					table.insert(array, ":recording_name, ");
+					table.insert(array, ":recording_description, ");
+					if (storage_type == "base64") then
+						table.insert(array, ":recording_base64, ");
+					end
+					table.insert(array, ":recording_name ");
+					table.insert(array, ") ");
+					sql = table.concat(array, "\n");
+
+					local params = {
+						recording_uuid = recording_uuid;
+						domain_uuid = domain_uuid;
+						recording_name = recording_name;
+						recording_description = recording_description;
+						recording_base64 = recording_base64;
+					};
+
+					if (debug["sql"]) then
+						freeswitch.consoleLog("notice", "[recording] SQL: " .. sql .. "; params: " .. json.encode(params) .. "\n");
+					end
+
+					if (storage_type == "base64") then
+						local Database = require "resources.functions.database"
+						local dbh = Database.new('system', 'base64');
+						dbh:query(sql, params);
+						dbh:release();
+					else
+						--setup the database connection
+							local Database = require "resources.functions.database";
+							local db = dbh or Database.new('system');
+							db:query(sql, params);
+					end
+				
+				--rename temp file
+				if (file_exists(recordings_dir.."/"..temp_recording_name)) then
+					os.rename(recordings_dir.."/"..temp_recording_name, recordings_dir.."/"..recording_name);
+				end
+				
 				--recording saved, hangup
-				session:streamFile("ivr/ivr-recording_saved.wav");
-				return;
+					session:streamFile("ivr/ivr-recording_saved.wav");
+					return;
+					
+					
 			elseif (digits == "2") then
 				--delete the old recording
-					os.remove (recordings_dir.."/"..recording_name);
+					os.remove (recordings_dir.."/"..temp_recording_name);
 					--session:execute("system", "rm "..);
+
+				--setup the database connection
+					local Database = require "resources.functions.database";
+					local db = dbh or Database.new('system');
+
+				--delete the previous recording
+					sql = "delete from v_recordings ";
+					sql = sql .. "where domain_uuid = :domain_uuid ";
+					sql = sql .. "and recording_filename = :recording_name";
+					db:query(sql, {domain_uuid = domain_uuid, recording_name = temp_recording_name});
+					
 				--make a new recording
 					begin_record(session, sounds_dir, recordings_dir);
 			else
