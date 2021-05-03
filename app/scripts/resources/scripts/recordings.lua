@@ -114,7 +114,7 @@
 				min_digits = 1;
 				max_digits = 20;
 				session:sleep(1000);
-				recording_id = session:playAndGetDigits(min_digits, max_digits, max_tries, digit_timeout, "#", sounds_dir.."/"..default_language.."/"..default_dialect.."/"..default_voice.."/ivr/ivr-id_number.wav", "", "\\d+");
+				recording_id = session:playAndGetDigits(min_digits, max_digits, max_tries, digit_timeout, "#", sounds_dir.."/"..default_language.."/"..default_dialect.."/"..default_voice.."/ivr/ivr-enter_ext.wav", "", "\\d+");
 				recording_name = recording_prefix..recording_id.."."..record_ext;
 			elseif (tonumber(recording_id) ~= nil) then
 				recording_name = recording_prefix..recording_id.."."..record_ext;
@@ -131,8 +131,10 @@
 			end
 
 		--prompt for the recording
-			session:streamFile(sounds_dir.."/"..default_language.."/"..default_dialect.."/"..default_voice.."/ivr/ivr-recording_started.wav");
-			session:execute("set", "playback_terminators=#");
+			session:execute("playback", "phrase:voicemail_record_greeting");
+			session:execute("sleep", "500");
+			session:streamFile("tone_stream://L=1;%(500, 0, 640)");
+			session:execute("set", "playback_terminators=any");
 
 		--make the directory
 			mkdir(recordings_dir);
@@ -266,7 +268,7 @@
 
 			if (digits == "1") then
 				--recording saved, hangup
-				session:streamFile("voicemail/vm-saved.wav");
+				session:streamFile("ivr/ivr-recording_saved.wav");
 				return;
 			elseif (digits == "2") then
 				--delete the old recording
@@ -276,7 +278,7 @@
 					begin_record(session, sounds_dir, recordings_dir);
 			else
 				--recording saved, hangup
-					session:streamFile("voicemail/vm-saved.wav");
+					session:streamFile("ivr/ivr-recording_saved.wav");
 				return;
 			end
 	end
