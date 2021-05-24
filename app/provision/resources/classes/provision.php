@@ -341,14 +341,13 @@ include "root.php";
 
 								//register that we have seen the device
 									$sql = "update v_devices ";
-									$sql .= "set device_provisioned_date = :device_provisioned_date, device_provisioned_method = :device_provisioned_method, device_provisioned_ip = :device_provisioned_ip, device_provisioned_agent = :device_provisioned_agent ";
+									$sql .= "set device_provisioned_date = :device_provisioned_date, device_provisioned_method = :device_provisioned_method, device_provisioned_ip = :device_provisioned_ip ";
 									$sql .= "where domain_uuid = :domain_uuid and device_mac_address = :device_mac_address ";
 									$parameters['domain_uuid'] = $domain_uuid;
 									$parameters['device_mac_address'] = strtolower($mac);
 									$parameters['device_provisioned_date'] = date("Y-m-d H:i:s");
 									$parameters['device_provisioned_method'] = (isset($_SERVER["HTTPS"]) ? 'https' : 'http');
 									$parameters['device_provisioned_ip'] = $_SERVER['REMOTE_ADDR'];
-									$parameters['device_provisioned_agent'] = $_SERVER['HTTP_USER_AGENT'];
 									$database = new database;
 									$database->execute($sql, $parameters);
 									unset($parameters);
@@ -415,7 +414,7 @@ include "root.php";
 							$templates['snom370-SIP'] = 'snom/370';
 							$templates['snom820-SIP'] = 'snom/820';
 							$templates['snom-m3-SIP'] = 'snom/m3';
-							
+
 							$templates['Fanvil X6'] = 'fanvil/x6';
 							$templates['Fanvil i30'] = 'fanvil/i30';
 
@@ -502,7 +501,9 @@ include "root.php";
 
 							$templates['Vesa VCS754'] = 'vtech/vcs754';
 							$templates['Wget/1.11.3'] = 'konftel/kt300ip';
+
 							foreach ($templates as $key=>$value){
+
 								if(stripos($_SERVER['HTTP_USER_AGENT'],$key)!== false) {
 									$device_template = $value;
 									break;
@@ -832,6 +833,8 @@ include "root.php";
 								$sql .= "profile_key_icon as device_key_icon ";
 								$sql .= "from v_device_profile_keys ";
 								$sql .= "where device_profile_uuid = :device_profile_uuid ";
+								//add a check for $user_id and skip blf if it equals the extension
+								$sql .= "and (profile_key_value != :user_id or profile_key_value is null) ";
 								if (strtolower($device_vendor) == 'escene'){
 									$sql .= "and (lower(profile_key_vendor) = 'escene' or lower(profile_key_vendor) = 'escene programmable' or profile_key_vendor is null) ";
 								}
@@ -854,21 +857,43 @@ include "root.php";
 									$sql .= "cast(profile_key_id as numeric) asc ";
 								}
 								$parameters['device_profile_uuid'] = $device_profile_uuid;
+								$parameters['user_id'] = $lines['1']['user_id'];
 								$database = new database;
 								$keys = $database->select($sql, $parameters, 'all');
+								unset($parameters);
+
 								//add the profile keys to the device keys array
 								if (is_array($keys) && sizeof($keys) != 0) {
+									//$id=0;
 									foreach($keys as $row) {
+
 										//set the variables
+										//$id++;
 										$id = $row['device_key_id'];
 										$category = $row['device_key_category'];
 
+										//Update BLF name with extension name from database if it's empty
+										if ($row['device_key_label'] == "") {
+											$sql = "select effective_caller_id_name ";
+											$sql .= "from v_extensions ";
+											$sql .= "where domain_uuid= :domain_uuid ";
+											$sql .= "and extension= :extension ";
+											$parameters['domain_uuid'] = $domain_uuid;
+											$parameters['extension'] = $row['device_key_value'];
+											$database = new database;
+											$blf_label = $database->select($sql, $parameters, 'column');
+											$row['device_key_label'] = $blf_label;
+											unset($sql, $parameters);
+										}
+
 										//build the device keys array
 										$device_keys[$category][$id] = $row;
+										$device_keys[$category][$id]['device_key_id'] = $id;
 										$device_keys[$category][$id]['device_key_owner'] = "profile";
 
 										//kept temporarily for backwards comptability to allow custom templates to be updated
 										$device_keys[$id] = $row;
+										$device_keys[$id]['device_key_id'] = $id;
 										$device_keys[$id]['device_key_owner'] = "profile";
 									}
 								}
@@ -902,6 +927,7 @@ include "root.php";
 							$parameters['device_uuid'] = $device_uuid;
 							$database = new database;
 							$keys = $database->select($sql, $parameters, 'all');
+							unset($parameters);
 
 						//override profile keys with the device keys
 							if (is_array($keys)) {
@@ -909,6 +935,20 @@ include "root.php";
 									//set the variables
 									$id = $row['device_key_id'];
 									$category = $row['device_key_category'];
+
+									//Update BLF name with extension name from database if it's empty
+									if ($row['device_key_label'] == "") {
+											$sql = "select effective_caller_id_name ";
+											$sql .= "from v_extensions ";
+											$sql .= "where domain_uuid= :domain_uuid ";
+											$sql .= "and extension= :extension ";
+											$parameters['domain_uuid'] = $domain_uuid;
+											$parameters['extension'] = $row['device_key_value'];
+											$database = new database;
+											$blf_label = $database->select($sql, $parameters, 'column');
+											$row['device_key_label'] = $blf_label;
+											unset($sql, $parameters);
+									}
 
 									//build the device keys array
 									$device_keys[$category][$id] = $row;
@@ -929,7 +969,6 @@ include "root.php";
 						echo "<pre>\n";
 						exit;
 					}
-
 				//set the variables key and values
 					$x = 1;
 					$variables['domain_name'] = $domain_name;
@@ -1076,7 +1115,7 @@ include "root.php";
 
 				//set the mac address in the correct format
 					$mac = $this->format_mac($mac, $device_vendor);
-				
+
 				// set date/time for versioning provisioning templates
 					if (strlen($_SESSION['provision']['version_format']['text']) > 0) {
 						$time = date($_SESSION['provision']['version_format']['text']);
