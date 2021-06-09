@@ -365,7 +365,10 @@
 											}
 										}
 									}
-									if (is_array($array[$parent][$row_id])) { $y++; }
+									if (is_array($array[$parent][$row_id]) && 
+										($field_name != "phone_number" && $field_name != "phone_speed_dial" && $field_name != "phone_type_voice")) {
+										$y++;
+									}
 								}
 	
 							//process a chunk of the array
@@ -390,7 +393,6 @@
 					} //end while
 
 					fclose($handle);
-
 				//save to the data
 					if (is_array($array)) {
 						$database = new database;
