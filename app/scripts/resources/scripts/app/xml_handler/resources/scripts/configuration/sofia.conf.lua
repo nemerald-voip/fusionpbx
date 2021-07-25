@@ -69,6 +69,18 @@
 			--table.insert(xml, [[				<param name="auto-restart" value="false"/>]]);
 			table.insert(xml, [[				<param name="debug-presence" value="0"/>]]);
 			--table.insert(xml, [[				<param name="capture-server" value="udp:homer.domain.com:5060"/>]]);
+
+		--get capture-server setting from default settings
+			sql = "select default_setting_value from v_default_settings ";
+			sql = sql .. "where default_setting_category = 'server' ";
+			sql = sql .. "and default_setting_subcategory = 'capture_server' ";
+			sql = sql .. "and default_setting_enabled = true ";
+			capture_server = dbh:first_value(sql, nil);
+			if ((capture_server ~= nil) and (string.len(capture_server) > 0)) then
+				table.insert(xml, [[				<param name="capture-server" value="]] .. capture_server.. [["/>]]);
+			end;
+			
+			
 			table.insert(xml, [[			</global_settings>]]);
 			table.insert(xml, [[			<profiles>]]);
 
