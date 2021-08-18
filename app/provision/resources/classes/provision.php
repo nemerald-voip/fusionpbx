@@ -720,7 +720,7 @@ include "root.php";
 									$sql .= "cast(profile_key_id as numeric) asc ";
 								}
 								$parameters['device_profile_uuid'] = $device_profile_uuid;
-								$parameters['user_id'] = $lines['1']['user_id'];
+								$parameters['user_id'] = $device_lines['1']['user_id'];
 								$database = new database;
 								$keys = $database->select($sql, $parameters, 'all');
 
@@ -791,7 +791,7 @@ include "root.php";
 								$sql .= "cast(device_key_id as numeric) asc ";
 							}
 							$parameters['device_uuid'] = $device_uuid;
-							$parameters['user_id'] = $lines['1']['user_id'];
+							$parameters['user_id'] = $device_lines['1']['user_id'];
 							$database = new database;
 							$keys = $database->select($sql, $parameters, 'all');
 
