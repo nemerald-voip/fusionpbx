@@ -721,33 +721,85 @@
 		{literal}
 		var recording_audio, audio_clock;
 
-		function recording_play(recording_id) {
+		function recording_play(recording_id, chk=0) {
 			if (document.getElementById('recording_progress_bar_'+recording_id)) {
 				document.getElementById('recording_progress_bar_'+recording_id).style.display='';
 			}
-			recording_audio = document.getElementById('recording_audio_'+recording_id);
+			if(chk==1){
+				$.ajax({
+					url: 'recordings_curl.php',
+					type: 'POST',
+					data: {uuid:recording_id},
+					dataType: 'json',
+					success: function(response){
+						// recording_type='';
+						// url = response.url;
+						// type = url.split("?")[0];
+						
+						// console.log(type);
+						// switch (type) {
+						// 	case "wav" : recording_type = "audio/wav"; break;
+						// 	case "mp3" : recording_type = "audio/mpeg"; break;
+						// 	case "ogg" : recording_type = "audio/ogg"; break;
+						// }
+						
+						// $('#recording_audio_'+recording_id).attr("type",recording_type);
+						recording_audio = document.getElementById('recording_audio_'+recording_id);
 
-			if (recording_audio.paused) {
-				recording_audio.volume = 1;
-				recording_audio.play();
-				document.getElementById('recording_button_'+recording_id).innerHTML = "<span class='{/literal}{$settings.theme.button_icon_pause}{literal} fa-fw'></span>";
-				audio_clock = setInterval(function () { update_progress(recording_id); }, 20);
+						if (recording_audio.paused) {
 
-				$('[id*=recording_button]').not('[id*=recording_button_'+recording_id+']').html("<span class='{/literal}{$settings.theme.button_icon_play}{literal} fa-fw'></span>");
-				$('[id*=recording_progress_bar]').not('[id*=recording_progress_bar_'+recording_id+']').css('display', 'none');
+							if($('#recording_audio_'+recording_id).attr("src")==""){
+								$('#recording_audio_'+recording_id).attr("src",response.url);
+							}
+							recording_audio.volume = 1;
+							recording_audio.play();
+							document.getElementById('recording_button_'+recording_id).innerHTML = "<span class='{/literal}{$settings.theme.button_icon_pause}{literal} fa-fw'></span>";
+							audio_clock = setInterval(function () { update_progress(recording_id); }, 20);
 
-				$('audio').each(function(){$('#menu_side_container').width()
-					if ($(this).get(0) != recording_audio) {
-						$(this).get(0).pause(); //stop playing
-						$(this).get(0).currentTime = 0; //reset time
+							$('[id*=recording_button]').not('[id*=recording_button_'+recording_id+']').html("<span class='{/literal}{$settings.theme.button_icon_play}{literal} fa-fw'></span>");
+							$('[id*=recording_progress_bar]').not('[id*=recording_progress_bar_'+recording_id+']').css('display', 'none');
+
+							$('audio').each(function(){$('#menu_side_container').width()
+								if ($(this).get(0) != recording_audio) {
+									$(this).get(0).pause(); //stop playing
+									$(this).get(0).currentTime = 0; //reset time
+								}
+							});
+						}
+						else {
+							recording_audio.pause();
+							document.getElementById('recording_button_'+recording_id).innerHTML = "<span class='{/literal}{$settings.theme.button_icon_play}{literal} fa-fw'></span>";
+							clearInterval(audio_clock);
+						}
 					}
-				});
+				})
+			}else{
+
+				recording_audio = document.getElementById('recording_audio_'+recording_id);
+
+				if (recording_audio.paused) {
+					recording_audio.volume = 1;
+					recording_audio.play();
+					document.getElementById('recording_button_'+recording_id).innerHTML = "<span class='{/literal}{$settings.theme.button_icon_pause}{literal} fa-fw'></span>";
+					audio_clock = setInterval(function () { update_progress(recording_id); }, 20);
+
+					$('[id*=recording_button]').not('[id*=recording_button_'+recording_id+']').html("<span class='{/literal}{$settings.theme.button_icon_play}{literal} fa-fw'></span>");
+					$('[id*=recording_progress_bar]').not('[id*=recording_progress_bar_'+recording_id+']').css('display', 'none');
+
+					$('audio').each(function(){$('#menu_side_container').width()
+						if ($(this).get(0) != recording_audio) {
+							$(this).get(0).pause(); //stop playing
+							$(this).get(0).currentTime = 0; //reset time
+						}
+					});
+				}
+				else {
+					recording_audio.pause();
+					document.getElementById('recording_button_'+recording_id).innerHTML = "<span class='{/literal}{$settings.theme.button_icon_play}{literal} fa-fw'></span>";
+					clearInterval(audio_clock);
+				}
 			}
-			else {
-				recording_audio.pause();
-				document.getElementById('recording_button_'+recording_id).innerHTML = "<span class='{/literal}{$settings.theme.button_icon_play}{literal} fa-fw'></span>";
-				clearInterval(audio_clock);
-			}
+			
 		}
 
 		function recording_stop(recording_id) {
