@@ -205,6 +205,21 @@
 					if (permission_exists('call_recording_download')) {
 						echo button::create(['type'=>'button','title'=>$text['label-download'],'icon'=>$_SESSION['theme']['button_icon_download'],'link'=>'download.php?id='.urlencode($row['call_recording_uuid']).'&binary']);
 					}
+				}else{
+					if (permission_exists('call_recording_play')) {
+						$recording_file_ext = pathinfo($row['call_recording_name'], PATHINFO_EXTENSION);
+						switch ($recording_file_ext) {
+							case "wav" : $recording_type = "audio/wav"; break;
+							case "mp3" : $recording_type = "audio/mpeg"; break;
+							case "ogg" : $recording_type = "audio/ogg"; break;
+						}
+						$recording_type = "audio/wav";
+						echo "<audio id='recording_audio_".escape($row['call_recording_uuid'])."' style='display: none;' preload='none' ontimeupdate=\"update_progress('".escape($row['call_recording_uuid'])."')\" onended=\"recording_reset('".escape($row['call_recording_uuid'])."');\" src='' type=''></audio>";
+						echo button::create(['type'=>'button','title'=>$text['label-play'].' / '.$text['label-pause'],'icon'=>$_SESSION['theme']['button_icon_play'],'id'=>'recording_button_'.escape($row['call_recording_uuid']),'onclick'=>"recording_play('".escape($row['call_recording_uuid'])."',1)"]);
+					}
+					if (permission_exists('call_recording_download')) {
+						echo button::create(['type'=>'button','title'=>$text['label-download'],'icon'=>$_SESSION['theme']['button_icon_download'],'link'=>'download.php?id='.urlencode($row['call_recording_uuid']).'&chk=1']);
+					}
 				}
 				echo "	</td>\n";
 			}
