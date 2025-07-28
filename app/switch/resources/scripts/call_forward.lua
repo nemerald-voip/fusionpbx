@@ -223,8 +223,8 @@
 		if (enabled == "true") then
 			sql = sql .. "forward_all_destination = :forward_all_destination, ";
 			sql = sql .. "do_not_disturb = 'false', ";
-		else
-			sql = sql .. "forward_all_destination = null, ";
+--		else
+--			sql = sql .. "forward_all_destination = null, ";
 		end
 		sql = sql .. "forward_all_enabled = :forward_all_enabled ";
 		sql = sql .. "where domain_uuid = :domain_uuid ";
