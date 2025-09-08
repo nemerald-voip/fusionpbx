@@ -1,0 +1,7 @@
+<extension name="hotel-room-status-update" number="*26[d{1,2}]" context="global" continue="false" app_uuid="9f1cb908-0345-4587-88fb-0b7f384d8587" enabled="true" global="true" order="511">
+    <condition field="destination_number" expression="^\*26(\d{1,2})$">
+		<action application="answer"/>
+        <action application="set" data='room_status=$1'/>
+		<action application="lua" data="lua/hotel-room-status-update.lua"/>
+	</condition>
+</extension>
