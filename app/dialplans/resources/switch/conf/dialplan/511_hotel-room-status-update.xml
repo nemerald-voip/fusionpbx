@@ -2,6 +2,6 @@
     <condition field="destination_number" expression="^\*26(\d{1,2})$">
 		<action application="answer"/>
         <action application="set" data='room_status=$1'/>
-		<action application="lua" data="lua/hotel-room-status-update.lua"/>
+		<action application="lua" data="lua/hotel_room_status_update.lua"/>
 	</condition>
 </extension>
