@@ -1,37 +1,27 @@
---	Part of FusionPBX
---	Copyright (C) 2013 - 2020 Mark J Crane <markjcrane@fusionpbx.com>
---	All rights reserved.
---
---	Redistribution and use in source and binary forms, with or without
---	modification, are permitted provided that the following conditions are met:
---
---	1. Redistributions of source code must retain the above copyright notice,
---	  this list of conditions and the following disclaimer.
---
---	2. Redistributions in binary form must reproduce the above copyright
---	  notice, this list of conditions and the following disclaimer in the
---	  documentation and/or other materials provided with the distribution.
---
---	THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
---	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
---	AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
---	AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
---	OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
---	SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
---	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
---	CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
---	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
---	POSSIBILITY OF SUCH DAMAGE.
-
 --load libraries
 local send_mail = require 'resources.functions.send_mail'
 local Database = require "resources.functions.database"
 local Settings = require "resources.functions.lazy_settings"
 
 --define a function to send email
-function send_email(id, uuid)
+function send_email(id, uuid)    
+
     local db = dbh or Database.new('system')
     local settings = Settings.new(db, domain_name, domain_uuid)
+
+    local voicemail_queue_strategy = settings:get('voicemail', 'voicemail_queue_strategy', 'text');
+
+    if (voicemail_queue_strategy == "modern") then
+        -- NEW QUEUE: send webhook to schedule an email job 
+        local event_name = "send_vm_email_notification"
+        local payload = string.format(
+            '{"event":"%s","data":{"domain_uuid":"%s","voicemail_id":"%s","message_uuid":"%s","default_language":"%s", "default_dialect":"%s"}}',
+            event_name, domain_uuid, id, uuid, default_language, default_dialect
+        )
+        freeswitch.API():executeString(string.format("luarun lua/send_webhook.lua '%s'", payload))
+        return true
+    end
+
     local transcribe_enabled = settings:get('voicemail', 'transcribe_enabled', 'boolean');
     local http_protocol = settings:get('domain', 'http_protocol', 'text') or "https";
     local email_queue_enabled = "true";

@@ -531,6 +531,12 @@
 		echo "			<td class='formfld'>\n";
 		echo "				<select class='formfld' name='device_profile_keys[$x][profile_key_category]'>\n";
 		echo "					<option value='line' ".($row['profile_key_category'] == "line" ? "selected='selected'" : null).">".$text['label-line']."</option>\n";
+        echo "	<option value='any' ".($row['profile_key_category'] == "any" ? "selected='selected'" : null).">Poly - Any </option>\n";
+        echo "	<option value='unassigned' ".($row['profile_key_category'] == "unassigned" ? "selected='selected'" : null).">Poly - Unassigned </option>\n";
+        echo "	<option value='blf' ".($row['profile_key_category'] == "blf" ? "selected='selected'" : null).">Poly - BLF </option>\n";
+        echo "	<option value='efk' ".($row['profile_key_category'] == "efk" ? "selected='selected'" : null).">Poly - EFK </option>\n";
+        echo "	<option value='speeddial' ".($row['profile_key_category'] == "speeddial" ? "selected='selected'" : null).">Poly - SpeedDial </option>\n";
+        echo "	<option value='presense' ".($row['profile_key_category'] == "presence" ? "selected='selected'" : null).">Poly - Presence </option>\n";
 		if ($row['profile_key_vendor'] !== "polycom") { 
 			echo "					<option value='memory' ".($row['profile_key_category'] == "memory" ? "selected='selected'" : null).">".$text['label-memory']."</option>\n";
 		}
