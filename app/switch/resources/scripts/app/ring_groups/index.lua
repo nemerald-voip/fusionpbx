@@ -1046,6 +1046,18 @@ log = require "resources.functions.log".ring_group
 							or session:getVariable("originate_disposition") == "RECOVERY_ON_TIMER_EXPIRE"
 							or session:getVariable("originate_disposition") == "failure"
 						) then
+
+	if ring_group_timeout_app == "hangup" then
+        if session and session:ready() then
+     --       freeswitch.consoleLog("NOTICE", "[ring_group] Playing busy before hangup\n");
+                                --set the status
+                                        status = 'missed'
+                                --send missed call notification
+                                        missed();
+            session:streamFile("tone_stream://L=3000;%(500,500,480,620)");
+        end
+    end
+
 							--execute the time out action
 								if ring_group_timeout_app and #ring_group_timeout_app > 0 then
 									session:execute(ring_group_timeout_app, ring_group_timeout_data);
