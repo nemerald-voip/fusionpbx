@@ -1,28 +1,3 @@
---	Part of FusionPBX
---	Copyright (C) 2013-2023 Mark J Crane <markjcrane@fusionpbx.com>
---	All rights reserved.
---
---	Redistribution and use in source and binary forms, with or without
---	modification, are permitted provided that the following conditions are met:
---
---	1. Redistributions of source code must retain the above copyright notice,
---	  this list of conditions and the following disclaimer.
---
---	2. Redistributions in binary form must reproduce the above copyright
---	  notice, this list of conditions and the following disclaimer in the
---	  documentation and/or other materials provided with the distribution.
---
---	THIS SOFTWARE IS PROVIDED ''AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
---	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
---	AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
---	AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
---	OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
---	SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
---	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
---	CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
---	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
---	POSSIBILITY OF SUCH DAMAGE.
-
 --set default values
 min_digits = 1;
 max_digits = 8;
@@ -638,12 +613,13 @@ if (voicemail_action == "save") then
                         end);
 
                     --get the voicemail_id
-                        sql = [[SELECT voicemail_id FROM v_voicemails WHERE voicemail_uuid = :voicemail_uuid]];
+                        sql = [[SELECT voicemail_id, voicemail_mail_to FROM v_voicemails WHERE voicemail_uuid = :voicemail_uuid]];
                         if (debug["sql"]) then
                             freeswitch.consoleLog("notice", "[voicemail] SQL: " .. sql .. "; params:" .. json.encode(params) .. "\n");
                         end
                         dbh:query(sql, params, function(result)
                             voicemail_id_copy = result["voicemail_id"];
+                            email_address = result["voicemail_mail_to"];
                         end);
 
                     --make sure the voicemail directory exists
@@ -665,58 +641,78 @@ if (voicemail_action == "save") then
 
                     --send the email with the voicemail recording attached
                         if (message_length ~= nil and tonumber(message_length) > 3) then
-                            send_email(voicemail_id_copy, voicemail_message_uuid);
 
-                            --Check if we need to send SMS notification
-                            freeswitch.consoleLog("notice", "[voicemail] Starting SMS script... \n");
-                            local enabled = false
-                            local value = nil
-
-                            local sql = [[
-                                SELECT domain_setting_value AS value
-                                FROM v_domain_settings
-                                WHERE domain_uuid = :domain_uuid
-                                AND domain_setting_category = 'voicemail'
-                                AND domain_setting_subcategory = 'sms_notifications_enabled'
-                                AND domain_setting_enabled = 'true'
-                                UNION ALL
-                                SELECT default_setting_value AS value
-                                FROM v_default_settings
-                                WHERE default_setting_category = 'voicemail'
-                                AND default_setting_subcategory = 'sms_notifications_enabled'
-                                AND default_setting_enabled = 'true'
-                                LIMIT 1
-                            ]]
-
-                            local params = { domain_uuid = domain_uuid }
-
-                            dbh:query(sql, params, function(row)
-                                value = row.value
-                            end)
-
-                            -- Default logic: treat nil/empty/false as false
-                            if value and (value == "true" or value == "1") then
-                                sms_notifications_enabled = true
-                            else
-                                sms_notifications_enabled = false
+                            -- Check if email address exist and send email notification
+                            if (email_address ~= nil and email_address ~= '') then
+                                send_email(voicemail_id_copy, voicemail_message_uuid);
                             end
 
-                            -- For debugging
-                            freeswitch.consoleLog("notice", "[voicemail] SMS Notifications Enabled: " .. tostring(sms_notifications_enabled) .. "\n")
+                            --Check if we need to send SMS notification
+                            local include_transcription =
+                                (settings['voicemail']
+                                and settings['voicemail']['sms_notification_include_transcription']
+                                and settings['voicemail']['sms_notification_include_transcription']['boolean'])
+                                or false
 
-                            if sms_notifications_enabled then
-                                local event_name = "send_vm_sms_notification"
-                                local timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ") -- UTC ISO 8601
-                                local message_date = os.date("%A, %d %b %Y %I:%M %p", start_epoch)
-                                local message_length_formatted = format_seconds(message_length)
+                            if (settings['voicemail'] ~= nil) then
+                                if (settings['voicemail']['sms_notification_include_transcription'] ~= nil) then
+                                    if (settings['voicemail']['sms_notification_include_transcription']['boolean'] ~= nil) then
+                                        include_transcription = settings['voicemail']['sms_notification_include_transcription']['boolean'];
+                                    end
+                                end
+                            end
+
+                            if not include_transcription then
+                                freeswitch.consoleLog("notice", "[voicemail] Starting SMS script... \n");
+                                local enabled = false
+                                local value = nil
+
+                                local sql = [[
+                                    SELECT domain_setting_value AS value
+                                    FROM v_domain_settings
+                                    WHERE domain_uuid = :domain_uuid
+                                    AND domain_setting_category = 'voicemail'
+                                    AND domain_setting_subcategory = 'sms_notifications_enabled'
+                                    AND domain_setting_enabled = 'true'
+                                    UNION ALL
+                                    SELECT default_setting_value AS value
+                                    FROM v_default_settings
+                                    WHERE default_setting_category = 'voicemail'
+                                    AND default_setting_subcategory = 'sms_notifications_enabled'
+                                    AND default_setting_enabled = 'true'
+                                    LIMIT 1
+                                ]]
+
+                                local params = { domain_uuid = domain_uuid }
+
+                                dbh:query(sql, params, function(row)
+                                    value = row.value
+                                end)
+
+                                -- Default logic: treat nil/empty/false as false
+                                if value and (value == "true" or value == "1") then
+                                    sms_notifications_enabled = true
+                                else
+                                    sms_notifications_enabled = false
+                                end
+
+                                -- For debugging
+                                freeswitch.consoleLog("notice", "[voicemail] SMS Notifications Enabled: " .. tostring(sms_notifications_enabled) .. "\n")
+
+                                if sms_notifications_enabled then
+                                    local event_name = "send_vm_sms_notification"
+                                    local timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ") -- UTC ISO 8601
+                                    local message_date = os.date("%A, %d %b %Y %I:%M %p", start_epoch)
+                                    local message_length_formatted = format_seconds(message_length)
 
 
-                                local payload = string.format(
-                                    '{"event":"%s","timestamp":"%s","data":{"domain_uuid":"%s","voicemail_id":"%s","message_length":"%s","message_date":"%s","caller_id_name":"%s","caller_id_number":"%s"}}',
-                                    event_name, timestamp, domain_uuid, voicemail_id, message_length_formatted, start_epoch, caller_id_name, caller_id_number
-                                )
-                                local cmd = string.format("luarun lua/send_webhook.lua '%s'", payload)
-                                freeswitch.API():executeString(cmd)
+                                    local payload = string.format(
+                                        '{"event":"%s","timestamp":"%s","data":{"domain_uuid":"%s","voicemail_id":"%s","message_length":"%s","message_date":"%s","caller_id_name":"%s","caller_id_number":"%s"}}',
+                                        event_name, timestamp, domain_uuid, voicemail_id, message_length_formatted, start_epoch, caller_id_name, caller_id_number
+                                    )
+                                    local cmd = string.format("luarun lua/send_webhook.lua '%s'", payload)
+                                    freeswitch.API():executeString(cmd)
+                                end
                             end
                         end
                 end --for
@@ -743,41 +739,3 @@ end
 --close the database connection
 dbh:release();
 
---notes
---record the video
-    --records audio only
-        --result = session:execute("set", "enable_file_write_buffering=false");
-        --mkdir(voicemail_dir.."/"..voicemail_id);
-        --session:recordFile("/tmp/recording.fsv", 200, 200, 200);
-    --records audio and video
-        --result = session:execute("record_fsv", "file.fsv");
-        --freeswitch.consoleLog("notice", "[voicemail] SQL: " .. result .. "\n");
-
---play the video recording
-    --plays the video
-        --result = session:execute("play_fsv", "/tmp/recording.fsv");
-    --plays the file but without the video
-        --dtmf = session:playAndGetDigits(min_digits, max_digits, max_tries, digit_timeout, "#", "/tmp/recording.fsv", "", "\\d+");
-    --freeswitch.consoleLog("notice", "[voicemail] SQL: " .. result .. "\n");
-
---callback (works with DTMF)
-    --http://wiki.freeswitch.org/wiki/Mod_fsv
-    --mkdir(voicemail_dir.."/"..voicemail_id);
-    --session:recordFile(file_name, max_len_secs, silence_threshold, silence_secs)
-    --session:sayPhrase(macro_name [,macro_data] [,language]);
-    --session:sayPhrase("voicemail_menu", "1:2:3:#", default_language);
-    --session:streamFile("directory/dir-to_select_entry.wav"); --works with setInputCallback
-    --session:streamFile("tone_stream://L=1;%(1000, 0, 640)");
-    --session:say("12345", default_language, "number", "pronounced");
-
-    --speak
-        --session:set_tts_parms("flite", "kal");
-        --session:speak("Please say the name of the person you're trying to contact");
-
---callback (execute and executeString does not work with DTMF)
-    --session:execute(api_string);
-    --session:executeString("playback "..mySound);
-
---uuid_video_refresh
-    --uuid_video_refresh,<uuid>,Send video refresh.,mod_commands
-    --may be used to clear video buffer before using record_fsv
