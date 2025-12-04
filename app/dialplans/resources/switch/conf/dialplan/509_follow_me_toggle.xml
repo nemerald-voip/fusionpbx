@@ -1,0 +1,5 @@
+<extension name="toggle-follow-me" number="fm[ext]" context="global" continue="false" app_uuid="8e155021-d957-44d7-aaf0-6fbf8f818c5f" enabled="true" global="true" order="509">
+	<condition field="destination_number" expression="^fm(\d+)$">
+    <action application="lua" data="lua/followme_toggle.lua"/>
+	</condition>
+</extension>
