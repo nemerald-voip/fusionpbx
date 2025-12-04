@@ -61,5 +61,8 @@
 
     <!-- Subscribe to events -->
     <!--<hook event="PHONE_FEATURE_SUBSCRIBE" subclass="" script="app.lua feature_event"/>-->
+
+    <!-- FS PBX: support FollowMe BLF -->
+    <!-- <param name="startup-script" value="lua/followme_blf.lua"/> -->
   </settings>
 </configuration>
