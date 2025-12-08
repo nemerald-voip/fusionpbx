@@ -1047,7 +1047,7 @@ log = require "resources.functions.log".ring_group
 							or session:getVariable("originate_disposition") == "failure"
 						) then
 
-	if ring_group_timeout_app == "hangup" then
+	if ring_group_timeout_app == "hangup" and call_direction == "inbound" then
         if session and session:ready() then
      --       freeswitch.consoleLog("NOTICE", "[ring_group] Playing busy before hangup\n");
                                 --set the status
