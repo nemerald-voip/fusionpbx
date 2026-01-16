@@ -356,27 +356,33 @@
 		end
 	end
 
---get the call center channel variables and set in the intercepted call
+	--get the call center channel variables and set in the intercepted call
 	if (uuid ~= nil) then
-		call_center_queue_uuid = api:executeString("uuid_getvar ".. uuid .." call_center_queue_uuid");
-		if (call_center_queue_uuid ~= nil) then
-			session:execute("set", "call_center_queue_uuid="..call_center_queue_uuid);
-			session:execute("set", "cc_cause=answered");
-
-			cc_side = api:executeString("uuid_getvar  ".. uuid .." cc_side");
-			if (cc_side ~= nil) then
-				session:execute("set", "cc_side="..cc_side);
+		-- Helper function to validate FreeSWITCH variables
+		local function validate_var(var_name)
+			local val = api:executeString("uuid_getvar " .. uuid .. " " .. var_name)
+			-- Check for nil, empty, _undef_, or error messages
+			if val == nil or val == "" or val == "_undef_" or string.sub(val, 1, 4) == "-ERR" then
+				return nil
 			end
+			return val
+		end
 
-			cc_queue = api:executeString("uuid_getvar  ".. uuid .." cc_queue");
-			if (cc_queue ~= nil) then
-				session:execute("set", "cc_queue="..cc_queue);
-			end
+		local cc_uuid = validate_var("call_center_queue_uuid")
+		
+		-- Only proceed if we actually found a valid queue UUID
+		if (cc_uuid ~= nil) then
+			session:execute("set", "call_center_queue_uuid=" .. cc_uuid)
+			session:execute("set", "cc_cause=answered")
 
-			cc_queue_joined_epoch = api:executeString("uuid_getvar  ".. uuid .." cc_queue_joined_epoch");
-			if (cc_queue_joined_epoch ~= nil) then
-				session:execute("set", "cc_queue_joined_epoch="..cc_queue_joined_epoch);
-			end
+			local cc_side = validate_var("cc_side")
+			if cc_side then session:execute("set", "cc_side=" .. cc_side) end
+
+			local cc_queue = validate_var("cc_queue")
+			if cc_queue then session:execute("set", "cc_queue=" .. cc_queue) end
+
+			local cc_epoch = validate_var("cc_queue_joined_epoch")
+			if cc_epoch then session:execute("set", "cc_queue_joined_epoch=" .. cc_epoch) end
 		end
 	end
 
