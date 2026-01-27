@@ -13,6 +13,7 @@
 		<action application="hash" data="insert/${domain_name}-call_return/${dialed_extension}/${caller_id_number}"/>
 		<action application="hash" data="insert/${domain_name}-last_dial_ext/${dialed_extension}/${uuid}"/>
 		<action application="set" data="called_party_call_group=${user_data(${dialed_extension}@${domain_name} var call_group)}"/>
+		<action application="set" data="origination_callee_id_name=${user_data(${dialed_extension}@${domain_name} var effective_caller_id_name)}"/>
 		<!--<action application="export" data="nolocal:sip_secure_media=${user_data(${dialed_extension}@${domain_name} var sip_secure_media)}"/>-->
 		<action application="hash" data="insert/${domain_name}-last_dial/${called_party_call_group}/${uuid}"/>
 		<action application="set" data="api_hangup_hook=lua app.lua hangup"/>
