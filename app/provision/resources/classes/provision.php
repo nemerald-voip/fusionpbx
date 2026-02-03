@@ -685,6 +685,8 @@
 							}
 							unset($parameters);
 							
+                            require_once __DIR__ . '/../../../../../app/helpers.php';
+
 							//get the device profile keys
 							if (is_uuid($device_profile_uuid)) {
 								$sql = "select ";
@@ -725,9 +727,11 @@
 									$sql .= "cast(profile_key_id as numeric) asc ";
 								}
 								$parameters['device_profile_uuid'] = $device_profile_uuid;
-								$parameters['user_id'] = $device_lines['1']['user_id'];
+								$parameters['user_id'] = $device_lines['1']['user_id'] ?? null;
 								$database = new database;
 								$keys = $database->select($sql, $parameters, 'all');
+
+                                $blf_label_map = fspbx_prefetch_blf_labels($domain_uuid, $keys);
 
 								//add the profile keys to the device keys array
 								if (is_array($keys) && sizeof($keys) != 0) {
@@ -739,19 +743,12 @@
 										$device_key_line = $row['device_key_line'];
 										
 										//Update BLF name with extension name from database if it's empty
-										if ($row['device_key_label'] == "" || !isset($row['device_key_label'])) {
-											unset($parameters);
-											$sql = "select effective_caller_id_name ";
-											$sql .= "from v_extensions ";
-											$sql .= "where domain_uuid= :domain_uuid ";
-											$sql .= "and extension= :extension ";
-											$parameters['domain_uuid'] = $domain_uuid;
-											$parameters['extension'] = $row['device_key_value'];
-											$database = new database;
-											$blf_label = $database->select($sql, $parameters, 'column');
-											$row['device_key_label'] = $blf_label;
-											unset($sql, $parameters);
-										}
+                                        if (empty($row['device_key_label'])) {
+                                            $val = (string)($row['device_key_value'] ?? '');
+                                            if ($val !== '' && isset($blf_label_map[$val])) {
+                                                $row['device_key_label'] = $blf_label_map[$val];
+                                            }
+                                        }
 
 										//build the device keys array
 										$device_keys[$category][$id] = $row;
@@ -800,6 +797,8 @@
 							$database = new database;
 							$keys = $database->select($sql, $parameters, 'all');
 
+                            $blf_label_map = fspbx_prefetch_blf_labels($domain_uuid, $keys);
+
 						//override profile keys with the device keys
 							if (is_array($keys)) {
 								foreach($keys as $row) {
@@ -814,19 +813,12 @@
 									}
 									
 									//Update BLF name with extension name from database if it's empty
-                                	if ($row['device_key_label'] == "" || !isset($row['device_key_label'])) {
-										unset($parameters);
-                                        $sql = "select effective_caller_id_name ";
-                                        $sql .= "from v_extensions ";
-                                        $sql .= "where domain_uuid= :domain_uuid ";
-                                        $sql .= "and extension= :extension ";
-                                        $parameters['domain_uuid'] = $domain_uuid;
-                                        $parameters['extension'] = $row['device_key_value'];
-                                        $database = new database;
-                                        $blf_label = $database->select($sql, $parameters, 'column');
-                                        $row['device_key_label'] = $blf_label;
-                                        unset($sql, $parameters);
-                                }
+                                    if (empty($row['device_key_label'])) {
+                                        $val = (string)($row['device_key_value'] ?? '');
+                                        if ($val !== '' && isset($blf_label_map[$val])) {
+                                            $row['device_key_label'] = $blf_label_map[$val];
+                                        }
+                                    }
 
 									//build the device keys array
 									$device_keys[$category][$id] = $row;
@@ -840,6 +832,74 @@
 								}
 							}
 							unset($parameters, $keys);
+
+
+                            $sql = "select device_key_uuid, device_uuid, key_index, key_type, key_value, key_label
+                                    from device_keys
+                                    where device_uuid = :device_uuid ";
+                            // Added logic to skip self-referencing BLF
+                            $sql .= "and (key_value != :user_id or key_value is null) ";
+                            $sql .= "order by key_index asc";
+                            $parameters['device_uuid'] = $device_uuid;
+                            $parameters['user_id'] = $device_lines['1']['user_id'] ?? null;
+                            $database = new database;
+                            $new_keys = $database->select($sql, $parameters, 'all');
+                            unset($parameters);
+
+                            if (is_array($new_keys) && sizeof($new_keys) != 0) {
+                                fspbx_apply_new_keys_override($device_keys, $new_keys, $device_uuid, $device_vendor, $device_lines, $domain_uuid);
+                            }
+                            unset($new_keys);
+
+                            //----------------------------------------------------------------------
+                            // START: Re-sequence Keys (Fix gaps caused by skipping BLF)
+                            //----------------------------------------------------------------------
+                            if (is_array($device_keys)) {
+                                // 1. Remove the existing "flat" keys (the root level numbered keys) 
+                                //    so we don't have leftover ghosts (like key 6 staying 6).
+                                foreach ($device_keys as $k => $v) {
+                                    if (is_numeric($k)) {
+                                        unset($device_keys[$k]);
+                                    }
+                                }
+
+                                // 2. Iterate through categories to re-index
+                                $cats_to_fix = array('line', 'memory', 'expansion', 'programmable');
+                                
+                                foreach ($cats_to_fix as $cat) {
+                                    if (isset($device_keys[$cat]) && is_array($device_keys[$cat])) {
+                                        // Sort by the old ID first to ensure we keep the relative order
+                                        ksort($device_keys[$cat]);
+                                        
+                                        $new_cat_array = array();
+                                        $x = 1; // Reset counter to 1 for this category
+
+                                        foreach ($device_keys[$cat] as $row) {
+                                            // Update the internal ID to match the new sequence 
+                                            // (This ensures the phone template writes "Line Key 5" instead of "Line Key 6")
+                                            $row['device_key_id'] = $x;
+                                            
+                                            // Add to the new category array
+                                            $new_cat_array[$x] = $row;
+                                            
+                                            // Add to the flat array at the root (required for backward compatibility)
+                                            $device_keys[$x] = $row;
+
+                                            $x++;
+                                        }
+                                        // Replace the category array with the clean, re-indexed one
+                                        $device_keys[$cat] = $new_cat_array;
+                                    }
+                                }
+                            }
+                            //----------------------------------------------------------------------
+                            // END: Re-sequence Keys
+                            //----------------------------------------------------------------------
+
+                            // print "<pre>";
+                            // print_r($device_keys);
+                            // print "</pre>";
+                            // return;
 							
 						//set the variables
 							if (is_array($device_lines) && sizeof($device_lines) != 0) {
