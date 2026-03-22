@@ -76,6 +76,7 @@ log = require "resources.functions.log".ring_group
 				or session:getVariable("originate_disposition") == "failure"
 				or session:getVariable("originate_disposition") == "ORIGINATOR_CANCEL"
 				or session:getVariable("originate_disposition") == "UNALLOCATED_NUMBER"
+				or session:getVariable("originate_disposition") == "CALL_REJECTED"
 			) then
 				--set the status
 					status = 'missed'
@@ -1045,6 +1046,7 @@ log = require "resources.functions.log".ring_group
 							or session:getVariable("originate_disposition") == "USER_BUSY"
 							or session:getVariable("originate_disposition") == "RECOVERY_ON_TIMER_EXPIRE"
 							or session:getVariable("originate_disposition") == "failure"
+							or session:getVariable("originate_disposition") == "CALL_REJECTED"
 						) then
 
 	if ring_group_timeout_app == "hangup" and call_direction == "inbound" then
