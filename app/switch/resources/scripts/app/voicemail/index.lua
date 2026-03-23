@@ -639,6 +639,33 @@ if (voicemail_action == "save") then
                             message_waiting(voicemail_id_copy, domain_uuid);
                         end
 
+                    -- send a webhook event
+                        if (message_length ~= nil and tonumber(message_length) > 3) then
+                            local event_name = "voicemail_created"
+                            local timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                            local file_path = voicemail_dir.."/"..voicemail_id_copy.."/msg_"..voicemail_message_uuid.."."..vm_message_ext
+
+                            local payload = string.format(
+                                '{"event":"%s","timestamp":"%s","data":{"domain_uuid":"%s","domain_name":"%s","voicemail_uuid":"%s","voicemail_id":"%s","voicemail_message_uuid":"%s","caller_id_name":"%s","caller_id_number":"%s","message_length":"%s","start_epoch":"%s","file_path":"%s","message_ext":"%s"}}',
+                                event_name,
+                                timestamp,
+                                domain_uuid or '',
+                                domain_name or '',
+                                row.voicemail_uuid_copy or '',
+                                voicemail_id_copy or '',
+                                voicemail_message_uuid or '',
+                                caller_id_name or '',
+                                caller_id_number or '',
+                                tostring(message_length or ''),
+                                tostring(start_epoch or ''),
+                                file_path or '',
+                                vm_message_ext or 'wav'
+                            )
+
+                            local cmd = string.format("luarun lua/send_webhook.lua '%s'", payload)
+                            freeswitch.API():executeString(cmd)
+                        end
+
                     --send the email with the voicemail recording attached
                         if (message_length ~= nil and tonumber(message_length) > 3) then
 
@@ -708,7 +735,7 @@ if (voicemail_action == "save") then
 
                                     local payload = string.format(
                                         '{"event":"%s","timestamp":"%s","data":{"domain_uuid":"%s","voicemail_id":"%s","message_length":"%s","message_date":"%s","caller_id_name":"%s","caller_id_number":"%s"}}',
-                                        event_name, timestamp, domain_uuid, voicemail_id, message_length_formatted, start_epoch, caller_id_name, caller_id_number
+                                        event_name, timestamp, domain_uuid, voicemail_id_copy, message_length_formatted, start_epoch, caller_id_name, caller_id_number
                                     )
                                     local cmd = string.format("luarun lua/send_webhook.lua '%s'", payload)
                                     freeswitch.API():executeString(cmd)
