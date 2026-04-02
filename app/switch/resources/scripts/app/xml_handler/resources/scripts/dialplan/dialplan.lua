@@ -198,7 +198,7 @@
 					else
 						xml:append(row.dialplan_xml);
 					end
-					if (row.domain_enabled == true) then
+					if (row.domain_enabled == true or row.domain_enabled == "true" or row.domain_enabled == "t") then
 						xml:append(row.dialplan_xml);
 					end
 				end);
