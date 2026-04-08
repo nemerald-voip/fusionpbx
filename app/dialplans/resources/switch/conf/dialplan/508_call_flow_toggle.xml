@@ -1,0 +1,5 @@
+<extension name="toggle-call-flow" number="flow[ext]" context="global" continue="false" app_uuid="1e2b2c79-7e2e-4a4f-92f7-0e5bb86e2fd7" enabled="true" global="true" order="508">
+	<condition field="destination_number" expression="^flow(\d+)$">
+    <action application="lua" data="lua/flow_toggle.lua"/>
+	</condition>
+</extension>
