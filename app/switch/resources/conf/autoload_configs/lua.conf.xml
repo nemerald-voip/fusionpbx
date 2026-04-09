@@ -30,15 +30,7 @@
     You can define multiple lines, one for each script you
     need to run.
     -->
-
-    <!-- FusionPBX: Support BLF for call flow -->
-    <!-- There 2 way to handle this
-      1 - Monitor - ignore SUBSCRIBE and just send NOTIFY each X seconds
-      2 - Event handler - handle each SUBSCRIBE request
-    -->
-    <!--<param name="startup-script" value="call_flow_monitor.lua"/>-->
-    <!--<param name="startup-script" value="blf_subscribe.lua flow"/>-->
-
+    
     <!-- FusionPBX: Support BLF for DND -->
     <!--<param name="startup-script" value="blf_subscribe.lua dnd"/>-->
 
@@ -47,9 +39,6 @@
 
     <!-- FusionPBX: Support BLF for Call Center Agents -->
     <!--<param name="startup-script" value="blf_subscribe.lua agent"/>-->
-
-    <!-- FusionPBX: Support BLF for Voicemail -->
-    <!--<param name="startup-script" value="blf_subscribe.lua voicemail"/>-->
 
     <!-- FusionPBX: Support MWI indicator-->
     <!-- There 2 way to handle this
@@ -62,7 +51,13 @@
     <!-- Subscribe to events -->
     <!--<hook event="PHONE_FEATURE_SUBSCRIBE" subclass="" script="app.lua feature_event"/>-->
 
-    <!-- FS PBX: support FollowMe BLF -->
-    <!-- <param name="startup-script" value="lua/followme_blf.lua"/> -->
+    <!-- FS PBX: FollowMe BLF daemon -->
+    <param name="startup-script" value="lua/followme_blf.lua"/>
+
+    <!-- FS PBX: Voicemail BLF daemon -->
+    <param name="startup-script" value="lua/vm_blf.lua"/>
+
+    <!-- FS PBX: Call Flow BLF daemon -->
+    <param name="startup-script" value="lua/flow_blf.lua"/>
   </settings>
 </configuration>
