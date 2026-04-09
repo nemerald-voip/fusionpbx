@@ -187,7 +187,7 @@
 				$dialplan_xml .= "		<action application=\"sleep\" data=\"200\"/>\n";
 				$dialplan_xml .= "		<action application=\"set\" data=\"feature_code=true\"/>\n";
 				$dialplan_xml .= "		<action application=\"set\" data=\"call_flow_uuid=".xml::sanitize($call_flow_uuid)."\"/>\n";
-				$dialplan_xml .= "		<action application=\"lua\" data=\"call_flow.lua\"/>\n";
+				$dialplan_xml .= "		<action application=\"lua\" data=\"lua/flow_toggle.lua\"/>\n";
 				$dialplan_xml .= "	</condition>\n";
 			}
 			$dialplan_xml .= "	<condition field=\"destination_number\" expression=\"^".xml::sanitize($destination_extension)."$\">\n";
@@ -256,28 +256,40 @@
 			$p->delete("dialplan_edit", "temp");
 
 		// Update subscribed endpoints
-		if (!empty($call_flow_feature_code)) {
-			$fp = event_socket_create();
-			if ($fp) {
-				//send the event
-				$event = "sendevent PRESENCE_IN\n";
-				$event .= "proto: flow\n";
-				$event .= "event_type: presence\n";
-				$event .= "alt_event_type: dialog\n";
-				$event .= "Presence-Call-Direction: outbound\n";
-				$event .= "state: Active (1 waiting)\n";
-				$event .= "from: flow+".$call_flow_feature_code."@".$_SESSION['domain_name']."\n";
-				$event .= "login: flow+".$call_flow_feature_code."@".$_SESSION['domain_name']."\n";
-				$event .= "unique-id: ".$call_flow_uuid."\n";
-				if ($call_flow_status == "true") {
-					$event .= "answer-state: confirmed\n";
-				} else {
-					$event .= "answer-state: terminated\n";
-				}
-				event_socket_request($fp, $event);
-				fclose($fp);
-			}
-		}
+        $userid = "flow".$call_flow_extension."@".$_SESSION['domain_name'];
+        $uuid = uuid();
+		$events = ['PRESENCE_OUT', 'PRESENCE_IN'];
+
+        foreach ($events as $event_name) {
+            $fp = event_socket_create();
+            if ($fp) {
+                $event  = "sendevent {$event_name}\n";
+                $event .= "proto: sip\n";
+                $event .= "event_type: presence\n";
+                $event .= "alt_event_type: dialog\n";
+                $event .= "Presence-Call-Direction: outbound\n";
+                $event .= "from: {$userid}\n";
+                $event .= "login: {$userid}\n";
+                $event .= "unique-id: {$uuid}\n";
+                $event .= "status: Active (1 waiting)\n";
+                $event .= "event_count: 1\n";
+                $event .= "rpid: unknown\n";
+
+                // match flow_notify.lua logic:
+                // call_flow_status false = alternate/night = LED ON
+                if ($call_flow_status == "false") {
+                    $event .= "answer-state: confirmed\n";
+                } else {
+                    $event .= "answer-state: terminated\n";
+                }
+
+                $response = event_socket_request($fp, $event);
+                error_log("BLF {$event_name} response: " . print_r($response, true));
+                fclose($fp);
+            } else {
+                error_log("BLF {$event_name}: event_socket_create() failed");
+            }
+        }
 
 		//debug info
 			//echo "<pre>";
