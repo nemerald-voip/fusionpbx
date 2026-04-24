@@ -260,36 +260,19 @@
         $uuid = uuid();
 		$events = ['PRESENCE_OUT', 'PRESENCE_IN'];
 
-        foreach ($events as $event_name) {
-            $fp = event_socket_create();
-            if ($fp) {
-                $event  = "sendevent {$event_name}\n";
-                $event .= "proto: sip\n";
-                $event .= "event_type: presence\n";
-                $event .= "alt_event_type: dialog\n";
-                $event .= "Presence-Call-Direction: outbound\n";
-                $event .= "from: {$userid}\n";
-                $event .= "login: {$userid}\n";
-                $event .= "unique-id: {$uuid}\n";
-                $event .= "status: Active (1 waiting)\n";
-                $event .= "event_count: 1\n";
-                $event .= "rpid: unknown\n";
-
-                // match flow_notify.lua logic:
-                // call_flow_status false = alternate/night = LED ON
-                if ($call_flow_status == "false") {
-                    $event .= "answer-state: confirmed\n";
-                } else {
-                    $event .= "answer-state: terminated\n";
-                }
-
-                $response = event_socket_request($fp, $event);
-                error_log("BLF {$event_name} response: " . print_r($response, true));
-                fclose($fp);
-            } else {
-                error_log("BLF {$event_name}: event_socket_create() failed");
-            }
-        }
+if (!empty($call_flow_feature_code)) {
+    $esl = event_socket::create();
+    if ($esl->is_connected()) {
+        $domain = $_SESSION['domain_name'];
+        // $call_flow_status: 'true' (day/LED OFF) or 'false' (night/LED ON)
+        // flow_notify.lua expects: feature_code, domain, toggle_status
+        $cmd = "bgapi luarun lua/flow_notify.lua "
+             . escapeshellarg($call_flow_extension) . " "
+             . escapeshellarg($domain) . " "
+             . escapeshellarg($call_flow_status);
+        $esl->request($cmd);
+    }
+}
 
 		//debug info
 			//echo "<pre>";
