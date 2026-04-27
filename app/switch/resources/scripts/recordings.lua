@@ -176,74 +176,93 @@
 			local Database = require "resources.functions.database";
 			local db = dbh or Database.new('system');
 
-		--get the description of the previous recording
-			sql = "SELECT recording_description, recording_name ";
-			sql = sql .. " FROM v_recordings ";
-			sql = sql .. "where domain_uuid = :domain_uuid ";
-			sql = sql .. "and recording_filename = :recording_filename ";
-			sql = sql .. "limit 1";
-			local params = {domain_uuid = domain_uuid, recording_filename = recording_filename};
-			local row = db:first_row(sql, params);
-			if (row) then
-				recording_description = row.recording_description;
-				recording_name = row.recording_name;
-			end
+--get the previous recording, if it exists
+	sql = "SELECT recording_uuid, recording_description, recording_name ";
+	sql = sql .. "FROM v_recordings ";
+	sql = sql .. "WHERE domain_uuid = :domain_uuid ";
+	sql = sql .. "AND recording_filename = :recording_filename ";
+	sql = sql .. "LIMIT 1";
 
-		--delete the previous recording
-			sql = "delete from v_recordings ";
-			sql = sql .. "where domain_uuid = :domain_uuid ";
-			sql = sql .. "and recording_filename = :recording_filename";
-			db:query(sql, {domain_uuid = domain_uuid, recording_filename = recording_filename});
+	local lookup_params = {
+		domain_uuid = domain_uuid;
+		recording_filename = recording_filename;
+	};
 
-		--get a new uuid
-			recording_uuid = api:execute("create_uuid");
+	local row = db:first_row(sql, lookup_params);
 
-		--save the message to the voicemail messages
-			local array = {}
-			table.insert(array, "INSERT INTO v_recordings ");
-			table.insert(array, "(");
-			table.insert(array, "recording_uuid, ");
-			table.insert(array, "domain_uuid, ");
-			table.insert(array, "recording_filename, ");
-			table.insert(array, "recording_description, ");
-			table.insert(array, "recording_base64, ");
-			table.insert(array, "recording_name ");
-			table.insert(array, ") ");
-			table.insert(array, "VALUES ");
-			table.insert(array, "( ");
-			table.insert(array, ":recording_uuid, ");
-			table.insert(array, ":domain_uuid, ");
-			table.insert(array, ":recording_filename, ");
-			table.insert(array, ":recording_description, ");
-			table.insert(array, ":recording_base64, ");
-			table.insert(array, ":recording_name ");
-			table.insert(array, ") ");
-			sql = table.concat(array, "\n");
+	if (row) then
+		--preserve existing description/name unless already provided
+		recording_uuid = row.recording_uuid;
 
-			local params = {
-				recording_uuid = recording_uuid;
-				domain_uuid = domain_uuid;
-				recording_filename = recording_filename;
-				recording_name = recording_name;
-				recording_description = recording_description;
-				recording_base64 = recording_base64;
-			};
+		if (recording_description == nil or recording_description == '') then
+			recording_description = row.recording_description;
+		end
 
-			if (debug["sql"]) then
-				freeswitch.consoleLog("notice", "[recording] SQL: " .. sql .. "; params: " .. json.encode(params) .. "\n");
-			end
+		if (recording_name == nil or recording_name == '') then
+			recording_name = row.recording_name;
+		end
 
-			if (storage_type == "base64") then
-				local Database = require "resources.functions.database"
-				local dbh = Database.new('system', 'base64');
-				dbh:query(sql, params);
-				dbh:release();
-			else
-				--setup the database connection
-				local Database = require "resources.functions.database";
-				local db = dbh or Database.new('system');
-				db:query(sql, params);
-			end
+		--update the existing recording instead of deleting it
+		local array = {}
+		table.insert(array, "UPDATE v_recordings SET ");
+		table.insert(array, "recording_description = :recording_description, ");
+		table.insert(array, "recording_base64 = :recording_base64, ");
+		table.insert(array, "recording_name = :recording_name, ");
+		table.insert(array, "insert_date = CURRENT_TIMESTAMP ");
+		table.insert(array, "WHERE domain_uuid = :domain_uuid ");
+		table.insert(array, "AND recording_filename = :recording_filename ");
+		sql = table.concat(array, "\n");
+	else
+		--new recording
+		recording_uuid = api:execute("create_uuid");
+
+		local array = {}
+		table.insert(array, "INSERT INTO v_recordings ");
+		table.insert(array, "(");
+		table.insert(array, "recording_uuid, ");
+		table.insert(array, "domain_uuid, ");
+		table.insert(array, "recording_filename, ");
+		table.insert(array, "recording_description, ");
+		table.insert(array, "recording_base64, ");
+		table.insert(array, "recording_name, ");
+		table.insert(array, "insert_date ");
+		table.insert(array, ") ");
+		table.insert(array, "VALUES ");
+		table.insert(array, "( ");
+		table.insert(array, ":recording_uuid, ");
+		table.insert(array, ":domain_uuid, ");
+		table.insert(array, ":recording_filename, ");
+		table.insert(array, ":recording_description, ");
+		table.insert(array, ":recording_base64, ");
+		table.insert(array, ":recording_name, ");
+		table.insert(array, "CURRENT_TIMESTAMP ");
+		table.insert(array, ") ");
+		sql = table.concat(array, "\n");
+	end
+
+	local params = {
+		recording_uuid = recording_uuid;
+		domain_uuid = domain_uuid;
+		recording_filename = recording_filename;
+		recording_name = recording_name;
+		recording_description = recording_description;
+		recording_base64 = recording_base64;
+	};
+
+	if (debug["sql"]) then
+		freeswitch.consoleLog("notice", "[recording] SQL: " .. sql .. "; params: " .. json.encode(params) .. "\n");
+	end
+
+	if (storage_type == "base64") then
+		local Database = require "resources.functions.database"
+		local dbh = Database.new('system', 'base64');
+		dbh:query(sql, params);
+		dbh:release();
+	else
+		local Database = require "resources.functions.database";
+		local db = dbh or Database.new('system');
+		db:query(sql, params);
+	end
 
 		--preview the recording
 			session:streamFile(recordings_dir.."/"..recording_filename);
