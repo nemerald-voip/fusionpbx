@@ -5,7 +5,7 @@
         <action application="set" data="recording_id="/>
         <action application="set" data="recording_prefix=recording"/>
         <action application="set" data="record_append=false"/>
-        <action application="lua" data="recordings_custom.lua"/>
+        <action application="lua" data="lua/manual_recordings.lua"/>
     </condition>
 </extension>
 
