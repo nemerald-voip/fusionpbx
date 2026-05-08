@@ -4,6 +4,7 @@
 		<!-- Applications -->
 		<load module="mod_commands"/>
 		<load module="mod_memcache"/>
+		<load module="mod_hiredis"/>
 
 		<!-- Languages -->
 		<load module="mod_lua"/>
