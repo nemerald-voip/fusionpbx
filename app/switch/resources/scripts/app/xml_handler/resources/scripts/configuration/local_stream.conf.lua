@@ -43,30 +43,37 @@
 			sql = "select d.domain_name, s.* "
 			sql = sql .. "from v_music_on_hold as s left outer join v_domains as d "
 			sql = sql .. "on d.domain_uuid = s.domain_uuid "
-			sql = sql .. "order by s.music_on_hold_name asc "
+			sql = sql .. "order by d.domain_name asc, s.music_on_hold_name asc, s.music_on_hold_rate asc "
 			if (debug["sql"]) then
 				freeswitch.consoleLog("notice", "[xml_handler] SQL: " .. sql .. "\n");
 			end
 			x = 0;
 			dbh:query(sql, function(row)
 
-				--combine the name, domain_name and the rate 
+				--combine the name and domain_name
 				name = '';
 				if (row.domain_uuid ~= nil and string.len(row.domain_uuid) > 0) then
 					name = row.domain_name..'/';
 				end
 				name = name .. row.music_on_hold_name;
-				if (row.music_on_hold_rate ~= nil and #row.music_on_hold_rate > 0) then
-					name = name .. '/' .. row.music_on_hold_rate;
-				end
 
 				--replace the variable with the path to the sounds directory
 				music_on_hold_path = row.music_on_hold_path:gsub("$${sounds_dir}", sounds_dir);
 
 				--set the rate
 				rate = row.music_on_hold_rate;
-				if rate == '' then
+				if rate == nil or rate == '' then
 					rate = '48000';
+				end
+
+				--set channels and interval
+				channels = row.music_on_hold_channels;
+				if channels == nil or channels == '' then
+					channels = '1';
+				end
+				interval = row.music_on_hold_interval;
+				if interval == nil or interval == '' then
+					interval = '20';
 				end
 
 				--add the full path to the chime list
@@ -95,8 +102,8 @@
 				xml:append([[	<directory name="]] .. xml.sanitize(name) .. [[" uuid="]] .. xml.sanitize(row.music_on_hold_uuid) .. [[" path="]] .. xml.sanitize(music_on_hold_path) .. [[">]]);
 				xml:append([[			<param name="rate" value="]] .. xml.sanitize(rate) .. [["/>]]);
 				xml:append([[			<param name="shuffle" value="]] .. xml.sanitize(row.music_on_hold_shuffle) .. [["/>]]);
-				xml:append([[			<param name="channels" value="1"/>]]);
-				xml:append([[			<param name="interval" value="20"/>]]);
+				xml:append([[			<param name="channels" value="]] .. xml.sanitize(channels) .. [["/>]]);
+				xml:append([[			<param name="interval" value="]] .. xml.sanitize(interval) .. [["/>]]);
 				xml:append([[			<param name="timer-name" value="]] .. xml.sanitize(timer_name) ..[["/>]]);
 				if (chime_list ~= nil) then
 					xml:append([[			<param name="chime-list" value="]] .. xml.sanitize(chime_list) .. [["/>]]);
