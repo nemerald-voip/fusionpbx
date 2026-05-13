@@ -374,6 +374,14 @@ if (!class_exists('modules')) {
 						$mod['module_order'] = 150;
 						$mod['module_default_enabled'] = 'true';
 						break;
+					case "mod_hiredis":
+						$mod['module_label'] = 'Hiredis';
+						$mod['module_category'] = 'Applications';
+						$mod['module_description'] = 'Redis API integration for FreeSWITCH.';
+						$mod['module_enabled'] = 'true';
+						$mod['module_order'] = 151;
+						$mod['module_default_enabled'] = 'true';
+						break;
 					case "mod_native_file":
 						$mod['module_label'] = 'Native File';
 						$mod['module_category'] = 'File Format Interfaces';
