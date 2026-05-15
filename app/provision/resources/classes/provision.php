@@ -834,7 +834,7 @@
 							unset($parameters, $keys);
 
 
-                            $sql = "select device_key_uuid, device_uuid, key_index, key_type, key_value, key_label
+                            $sql = "select device_key_uuid, device_uuid, key_area, key_index, key_type, key_value, key_label
                                     from device_keys
                                     where device_uuid = :device_uuid ";
                             // Added logic to skip self-referencing BLF
@@ -846,9 +846,20 @@
                             $new_keys = $database->select($sql, $parameters, 'all');
                             unset($parameters);
 
-                            if (is_array($new_keys) && sizeof($new_keys) != 0) {
+                            $has_new_keys = is_array($new_keys) && sizeof($new_keys) != 0;
+                            $has_template_keys = fspbx_has_assigned_device_key_template_rows(
+                                $device_uuid,
+                                $domain_uuid,
+                                $device_lines['1']['user_id'] ?? null
+                            );
+
+                            if (!is_array($new_keys)) {
+                                $new_keys = [];
+                            }
+                            if ($has_new_keys || $has_template_keys) {
                                 fspbx_apply_new_keys_override($device_keys, $new_keys, $device_uuid, $device_vendor, $device_lines, $domain_uuid);
                             }
+                            unset($has_new_keys, $has_template_keys);
                             unset($new_keys);
 
                             //----------------------------------------------------------------------
