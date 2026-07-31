@@ -98,21 +98,6 @@ use Aws\Common\Enum\Region;
 	$rows_per_page = ($_SESSION['domain']['paging']['numeric'] != '') ? $_SESSION['domain']['paging']['numeric'] : 50;
 	require_once "xml_cdr_inc.php";
 
-//javascript function: send_cmd
-	echo "<script type=\"text/javascript\">\n";
-	echo "	function send_cmd(url) {\n";
-	echo "		if (window.XMLHttpRequest) { // code for IE7+, Firefox, Chrome, Opera, Safari\n";
-	echo "			xmlhttp=new XMLHttpRequest();\n";
-	echo "		}\n";
-	echo "		else {// code for IE6, IE5\n";
-	echo "			xmlhttp=new ActiveXObject(\"Microsoft.XMLHTTP\");\n";
-	echo "		}\n";
-	echo "		xmlhttp.open(\"GET\",url,true);\n";
-	echo "		xmlhttp.send(null);\n";
-	echo "		document.getElementById('cmd_reponse').innerHTML=xmlhttp.responseText;\n";
-	echo "	}\n";
-	echo "</script>\n";
-
 //javascript to toggle export select box
 	echo "<script language='javascript' type='text/javascript'>";
 	echo "	var fade_speed = 400;";
@@ -788,40 +773,34 @@ use Aws\Common\Enum\Region;
 				//source
 					if (permission_exists('xml_cdr_caller_id_number')) {
 						$content .= "	<td class='middle no-link no-wrap'>";
-						$content .= "		<a href=\"javascript:void(0)\" onclick=\"send_cmd('".PROJECT_PATH."/app/click_to_call/click_to_call.php?src_cid_name=".urlencode(escape($row['caller_id_name']))."&src_cid_number=".urlencode(escape($row['caller_id_number']))."&dest_cid_name=".urlencode($outbound_caller_id_name)."&dest_cid_number=".urlencode($outbound_caller_id_number)."&src=".urlencode($user_extension)."&dest=".urlencode(escape($row['caller_id_number']))."&rec=false&ringback=us-ring&auto_answer=true');\">\n";
 						if (is_numeric($row['caller_id_number'])) {
 							$content .= "		".escape(format_phone(substr($row['caller_id_number'], 0, 20))).' ';
 						}
 						else {
 							$content .= "		".escape(substr($row['caller_id_number'], 0, 20)).' ';
 						}
-						$content .= "		</a>";
 						$content .= "	</td>\n";
 					}
 				//caller destination
 					if (permission_exists('xml_cdr_caller_destination')) {
 						$content .= "	<td class='middle no-link no-wrap hide-md-dn'>";
-						$content .= "		<a href=\"javascript:void(0)\" onclick=\"send_cmd('".PROJECT_PATH."/app/click_to_call/click_to_call.php?src_cid_name=".urlencode(escape($row['caller_id_name']))."&src_cid_number=".urlencode(escape($row['caller_id_number']))."&dest_cid_name=".urlencode($outbound_caller_id_name)."&dest_cid_number=".urlencode($outbound_caller_id_number)."&src=".urlencode($user_extension)."&dest=".urlencode(escape($row['caller_destination']))."&rec=false&ringback=us-ring&auto_answer=true');\">\n";
 						if (is_numeric($row['caller_destination'])) {
 							$content .= "		".escape(format_phone(substr($row['caller_destination'], 0, 20))).' ';
 						}
 						else {
 							$content .= "		".escape(substr($row['caller_destination'] ?? '', 0, 20)).' ';
 						}
-						$content .= "		</a>";
 						$content .= "	</td>\n";
 					}
 				//destination
 					if (permission_exists('xml_cdr_destination')) {
 						$content .= "	<td class='middle no-link no-wrap'>";
-						$content .= "		<a href=\"javascript:void(0)\" onclick=\"send_cmd('".PROJECT_PATH."/app/click_to_call/click_to_call.php?src_cid_name=".urlencode(escape($row['destination_number']))."&src_cid_number=".urlencode(escape($row['destination_number']))."&dest_cid_name=".urlencode($outbound_caller_id_name)."&dest_cid_number=".urlencode($outbound_caller_id_number)."&src=".urlencode($user_extension)."&dest=".urlencode(escape($row['destination_number']))."&rec=false&ringback=us-ring&auto_answer=true');\">\n";
 						if (is_numeric($row['destination_number'])) {
 							$content .= escape(format_phone(substr($row['destination_number'], 0, 20)))."\n";
 						}
 						else {
 							$content .= escape(substr($row['destination_number'], 0, 20))."\n";
 						}
-						$content .= "		</a>\n";
 						$content .= "	</td>\n";
 					}
 				//recording

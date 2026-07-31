@@ -54,21 +54,6 @@
 //show if exists
 	if (!empty($contact_extensions)) {
 
-		//javascript function: send_cmd
-			echo "<script type='text/javascript'>\n";
-			echo "function send_cmd(url) {\n";
-			echo "	if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari\n";
-			echo "		xmlhttp=new XMLHttpRequest();\n";
-			echo "	}\n";
-			echo "	else {// code for IE6, IE5\n";
-			echo "		xmlhttp=new ActiveXObject('Microsoft.XMLHTTP');\n";
-			echo "	}\n";
-			echo "	xmlhttp.open('GET',url,true);\n";
-			echo "	xmlhttp.send(null);\n";
-			echo "	document.getElementById('cmd_reponse').innerHTML=xmlhttp.responseText;\n";
-			echo "}\n";
-			echo "</script>\n";
-
 		//show the content
 			echo "<div class='grid' style='grid-template-columns: 70px 100px auto;'>\n";
 			$x = 0;
@@ -77,7 +62,7 @@
 				echo "<div class='box contact-details-label'>".$text['label-extension']."</div>\n";
 // 				($row['url_primary'] ? "style='font-weight: bold;'" : null).">\n";
 				echo "<div class='box'>";
-				echo button::create(['type'=>'button','class'=>'link','label'=>escape($row['extension']),'title'=>$text['label-click_to_call'],'onclick'=>"send_cmd('".PROJECT_PATH."/app/click_to_call/click_to_call.php?src_cid_name=".urlencode($row['extension'])."&src_cid_number=".urlencode($row['extension'])."&dest_cid_name=".urlencode($_SESSION['user']['extension'][0]['outbound_caller_id_name'])."&dest_cid_number=".urlencode($_SESSION['user']['extension'][0]['outbound_caller_id_number'])."&src=".urlencode($_SESSION['user']['extension'][0]['user'])."&dest=".urlencode($row['extension'])."&rec=false&ringback=us-ring&auto_answer=true');"]);
+				echo escape($row['extension']);
 				echo "</div>\n";
 				echo "<div class='box'>".$row['description']."</div>\n";
 				$x++;

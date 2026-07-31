@@ -96,14 +96,6 @@
 		exit;
 	}
 
-	if ($_SESSION['authorized']) {
-		// if old dashboard page is requested then redirect to new dashboard
-		if ($_SERVER['REQUEST_URI'] == "/core/dashboard/") {
-			header("Location: ".PROJECT_PATH."/dashboard");
-			exit;
-		}
-	}
-
 //if user is not authorized then send to login.php
 	if (!$_SESSION['authorized']) {
 		$target_path = ($_REQUEST["path"] != '') ? $_REQUEST["path"] : $_SERVER["REQUEST_URI"];
@@ -156,12 +148,8 @@
 				elseif (isset($_SESSION['login']['destination']['text'])) {
 					header("Location: ".$_SESSION['login']['destination']['text']);
 				}
-				elseif (file_exists($_SERVER["PROJECT_ROOT"]."/core/dashboard/app_config.php")) {
-					header("Location: ".PROJECT_PATH."/core/dashboard/");
-				}
 				else {
-					require_once "resources/header.php";
-					require_once "resources/footer.php";
+					header("Location: ".PROJECT_PATH."/dashboard");
 				}
 			}
 

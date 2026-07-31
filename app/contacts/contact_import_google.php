@@ -498,13 +498,7 @@ foreach ($contacts as $contact['id'] => $contact) {
 	if (sizeof($contact['numbers']) > 0) {
 		foreach ($contact['numbers'] as $contact_number) {
 			$contact_number_part = "<span style='font-size: 80%;'>".$contact_number['label'].":</span> ";
-			if (substr_count(strtoupper($contact_number['label']), 'FAX') == 0) {
-				$contact_number_part .= "<a href='javascript:void(0);' onclick=\"send_cmd('".PROJECT_PATH."/app/click_to_call/click_to_call.php?src_cid_name=".urlencode($contact_number['number'])."&src_cid_number=".urlencode($contact_number['number'])."&dest_cid_name=".urlencode($_SESSION['user']['extension'][0]['outbound_caller_id_name'])."&dest_cid_number=".urlencode($_SESSION['user']['extension'][0]['outbound_caller_id_number'])."&src=".urlencode($_SESSION['user']['extension'][0]['user'])."&dest=".urlencode($contact_number['number'])."&rec=false&ringback=us-ring&auto_answer=true');\">";
-			}
 			$contact_number_part .= format_phone($contact_number['number']);
-			if (substr_count(strtoupper($contact_number['label']), 'FAX') == 0) {
-				$contact_number_part .= "</a>";
-			}
 			$contact_numbers[] = $contact_number_part;
 			unset($contact_number_part);
 		}

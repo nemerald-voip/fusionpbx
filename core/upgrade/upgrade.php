@@ -124,21 +124,14 @@
 //include files
 	require dirname(__DIR__, 2) . "/resources/require.php";
 
-//check the permission
-	if(defined('STDIN')) {
-		$display_type = 'text'; //html, text
-	}
-	else {
-		require_once "resources/check_auth.php";
-		if (permission_exists('upgrade_schema') || permission_exists('upgrade_source') || if_group("superadmin")) {
-			//echo "access granted";
+//allow command-line execution only
+		if(defined('STDIN')) {
+			$display_type = 'text'; //html, text
 		}
 		else {
 			echo "access denied";
 			exit;
 		}
-		$display_type = 'html'; //html, text
-	}
 
 //set the default upgrade type
 	$upgrade_type = 'defaults';

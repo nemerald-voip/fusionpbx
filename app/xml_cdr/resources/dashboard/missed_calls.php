@@ -150,22 +150,7 @@
 			if (!empty($_SESSION['domain']['time_format']) && $_SESSION['domain']['time_format']['text'] == '12h') {
 				$start_date_time = str_replace(' 0',' ', $start_date_time);
 			}
-			//set click-to-call variables
-			if (permission_exists('click_to_call_call')) {
-				$tr_link = "onclick=\"send_cmd('".PROJECT_PATH."/app/click_to_call/click_to_call.php".
-					"?src_cid_name=".urlencode($row['caller_id_name'] ?? '').
-					"&src_cid_number=".urlencode($row['caller_id_number'] ?? '').
-					"&dest_cid_name=".urlencode($_SESSION['user']['extension'][0]['outbound_caller_id_name'] ?? '').
-					"&dest_cid_number=".urlencode($_SESSION['user']['extension'][0]['outbound_caller_id_number'] ?? '').
-					"&src=".urlencode($_SESSION['user']['extension'][0]['user'] ?? '').
-					"&dest=".urlencode($row['caller_id_number'] ?? '').
-					"&rec=".(isset($_SESSION['click_to_call']['record']['boolean']) ? $_SESSION['click_to_call']['record']['boolean'] : "false").
-					"&ringback=".(isset($_SESSION['click_to_call']['ringback']['text']) ? $_SESSION['click_to_call']['ringback']['text'] : "us-ring").
-					"&auto_answer=".(isset($_SESSION['click_to_call']['auto_answer']['boolean']) ? $_SESSION['click_to_call']['auto_answer']['boolean'] : "true").
-					"');\" ".
-					"style='cursor: pointer;'";
-			}
-			echo "<tr ".$tr_link.">\n";
+			echo "<tr>\n";
 			echo "<td valign='middle' class='".$row_style[$c]."' style='cursor: help; padding: 0 0 0 6px;'>\n";
 			if ($theme_cdr_images_exist) {
 				$call_result = ($row['answer_stamp'] != '') ? 'voicemail' : 'cancelled';
@@ -174,7 +159,7 @@
 				}
 			}
 			echo "</td>\n";
-			echo "<td valign='top' class='".$row_style[$c]." hud_text' nowrap='nowrap'><a href='javascript:void(0);' ".(($row['caller_id_name'] != '') ? "title=\"".$row['caller_id_name']."\"" : null).">".((is_numeric($row['caller_id_number'])) ? format_phone($row['caller_id_number']) : $row['caller_id_number'])."</td>\n";
+			echo "<td valign='top' class='".$row_style[$c]." hud_text' nowrap='nowrap' ".(($row['caller_id_name'] != '') ? "title=\"".$row['caller_id_name']."\"" : null).">".((is_numeric($row['caller_id_number'])) ? format_phone($row['caller_id_number']) : $row['caller_id_number'])."</td>\n";
 			echo "<td valign='top' class='".$row_style[$c]." hud_text' nowrap='nowrap'>".$start_date_time."</td>\n";
 			echo "</tr>\n";
 			$c = ($c) ? 0 : 1;

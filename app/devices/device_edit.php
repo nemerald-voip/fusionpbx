@@ -774,10 +774,7 @@
 	}
 
 //determine whether to build the qrcode
-	if ($device_template == "grandstream/wave") {
-		$qr_code_enabled = true;
-	}
-	else if ($device_template == "linphone/default") {
+	if ($device_template == "linphone/default") {
 		$qr_code_enabled = true;
 	}
 	else if ($device_template == "sipnetic/default") {
@@ -814,30 +811,9 @@
 			else {
 				$outbound_proxy_primary = $row['outbound_proxy_primary'];
 			}
-			$outbound_proxy_secondary = $row['outbound_proxy_secondary'];
-
-			//build content for grandstream wave
-			if ($device_template == "grandstream/wave") {
-				$content = "<?xml version='1.0' encoding='utf-8'?>";
-				$content .= "<AccountConfig version='1'>";
-				$content .= "<Account>";
-				$content .= "<RegisterServer>".$row['server_address']."</RegisterServer>";
-				$content .= "<OutboundServer>".$outbound_proxy_primary.":".$row['sip_port']."</OutboundServer>";
-				$content .= "<SecOutboundServer>".$outbound_proxy_secondary.":".$row['sip_port']."</SecOutboundServer>";
-				$content .= "<UserID>".$row['user_id']."</UserID>";
-				$content .= "<AuthID>".$row['auth_id']."</AuthID>";
-				$content .= "<AuthPass>".$row['password']."</AuthPass>";
-				$content .= "<AccountName>".$row['user_id']."</AccountName>";
-				$content .= "<DisplayName>".$row['display_name']."</DisplayName>";
-				$content .= "<Dialplan>{x+|*x+|*++}</Dialplan>";
-				$content .= "<RandomPort>0</RandomPort>";
-				$content .= "<Voicemail>*97</Voicemail>";
-				$content .= "</Account>";
-				$content .= "</AccountConfig>";
-			}
 
 			//build content for sipnetic
-			else if ($device_template == 'sipnetic/default') {
+			if ($device_template == 'sipnetic/default') {
 				switch ($row['sip_transport']) {
 					case 'udp': $sip_transport = 0; break;
 					case 'tls': $sip_transport = 2; break;

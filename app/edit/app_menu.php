@@ -57,7 +57,7 @@
 	$apps[$x]['menu'][$y]['path'] = "/app/edit/index.php?dir=xml";
 	$apps[$x]['menu'][$y]['groups'][] = "superadmin";
 	$y++;
-	$apps[$x]['menu'][$y]['title']['en-us'] = "Provision Editor";
+	$apps[$x]['menu'][$y]['title']['en-us'] = "Legacy Provision Templates";
 	$apps[$x]['menu'][$y]['title']['ar-eg'] = "محرر";
 	$apps[$x]['menu'][$y]['title']['de-at'] = "Bereitstellungs Editor";
 	$apps[$x]['menu'][$y]['title']['de-ch'] = "Beschreibung";
@@ -82,7 +82,7 @@
 	$apps[$x]['menu'][$y]['uuid'] = "57773542-a565-1a29-605d-6535da1a0870";
 	$apps[$x]['menu'][$y]['parent_uuid'] = "594d99c5-6128-9c88-ca35-4b33392cec0f";
 	$apps[$x]['menu'][$y]['category'] = "external";
-	$apps[$x]['menu'][$y]['path'] = "/app/edit/index.php?dir=provision";
+	$apps[$x]['menu'][$y]['path'] = "/legacy-provision-templates";
 	$apps[$x]['menu'][$y]['groups'][] = "superadmin";
 	$y++;
 	$apps[$x]['menu'][$y]['title']['en-us'] = "PHP Editor";

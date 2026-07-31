@@ -728,14 +728,14 @@ if (!class_exists('menu')) {
 				}
 
 			//get the menu from the database
-				$sql = "select i.menu_item_link, l.menu_item_title as menu_language_title, ";
-				$sql .= "i.menu_item_title, i.menu_item_protected, i.menu_item_category, ";
-				$sql .= "i.menu_item_icon, i.menu_item_uuid, i.menu_item_parent_uuid ";
-				$sql .= "from v_menu_items as i, v_menu_languages as l ";
-				$sql .= "where i.menu_item_uuid = l.menu_item_uuid ";
-				$sql .= "and l.menu_language = :menu_language ";
-				$sql .= "and l.menu_uuid = :menu_uuid ";
-				$sql .= "and i.menu_uuid = :menu_uuid ";
+					$sql = "select i.menu_item_link, coalesce(l.menu_item_title, i.menu_item_title) as menu_language_title, ";
+					$sql .= "i.menu_item_title, i.menu_item_protected, i.menu_item_category, ";
+					$sql .= "i.menu_item_icon, i.menu_item_uuid, i.menu_item_parent_uuid ";
+					$sql .= "from v_menu_items as i ";
+					$sql .= "left join v_menu_languages as l on i.menu_item_uuid = l.menu_item_uuid ";
+					$sql .= "and l.menu_language = :menu_language ";
+					$sql .= "and l.menu_uuid = :menu_uuid ";
+					$sql .= "where i.menu_uuid = :menu_uuid ";
 				$sql .= "and i.menu_item_parent_uuid is null ";
 				$sql .= "and i.menu_item_uuid in ";
 				$sql .= "( ";
@@ -800,12 +800,12 @@ if (!class_exists('menu')) {
 				}
 
 			//get the child menu from the database
-				$sql = "select i.menu_item_link, l.menu_item_title as menu_language_title, i.menu_item_title, i.menu_item_protected, i.menu_item_category, i.menu_item_icon, i.menu_item_uuid, i.menu_item_parent_uuid ";
-				$sql .= "from v_menu_items as i, v_menu_languages as l ";
-				$sql .= "where i.menu_item_uuid = l.menu_item_uuid ";
-				$sql .= "and l.menu_language = :menu_language ";
-				$sql .= "and l.menu_uuid = :menu_uuid ";
-				$sql .= "and i.menu_uuid = :menu_uuid ";
+					$sql = "select i.menu_item_link, coalesce(l.menu_item_title, i.menu_item_title) as menu_language_title, i.menu_item_title, i.menu_item_protected, i.menu_item_category, i.menu_item_icon, i.menu_item_uuid, i.menu_item_parent_uuid ";
+					$sql .= "from v_menu_items as i ";
+					$sql .= "left join v_menu_languages as l on i.menu_item_uuid = l.menu_item_uuid ";
+					$sql .= "and l.menu_language = :menu_language ";
+					$sql .= "and l.menu_uuid = :menu_uuid ";
+					$sql .= "where i.menu_uuid = :menu_uuid ";
 				$sql .= "and i.menu_item_parent_uuid = :menu_item_parent_uuid ";
 				$sql .= "and i.menu_item_uuid in ";
 				$sql .= "( ";
@@ -824,7 +824,7 @@ if (!class_exists('menu')) {
 					$sql .= ") ";
 				}
 				$sql .= ") ";
-				$sql .= "order by l.menu_item_title, i.menu_item_order asc ";
+					$sql .= "order by coalesce(l.menu_item_title, i.menu_item_title), i.menu_item_order asc ";
 				$parameters['menu_language'] = $_SESSION['domain']['language']['code'];
 				$parameters['menu_uuid'] = $this->menu_uuid;
 				$parameters['menu_item_parent_uuid'] = $menu_item_uuid;
@@ -868,45 +868,6 @@ if (!class_exists('menu')) {
 
 			//return the array
 				return $a;
-		}
-
-		/**
-		 * add the default menu when no menu exists
-		 */
-		public function menu_default() {
-			//set the default menu_uuid
-				$this->menu_uuid = 'b4750c3f-2a86-b00d-b7d0-345c14eca286';
-			//check to see if any menu exists
-				$sql = "select count(*) as count from v_menus ";
-				$sql .= "where menu_uuid = :menu_uuid ";
-				$parameters['menu_uuid'] = $this->menu_uuid;
-				$database = new database;
-				$num_rows = $database->select($sql, $parameters, 'column');
-				if ($num_rows == 0) {
-					//built insert array
-						$array['menus'][0]['menu_uuid'] = $this->menu_uuid;
-						$array['menus'][0]['menu_name'] = 'default';
-						$array['menus'][0]['menu_language'] = 'en-us';
-						$array['menus'][0]['menu_description'] = 'Default Menu';
-
-					//grant temporary permissions
-						$p = new permissions;
-						$p->add('menu_add', 'temp');
-
-					//execute insert
-						$database = new database;
-						$database->app_name = 'menu';
-						$database->app_uuid = 'f4b3b3d2-6287-489c-2a00-64529e46f2d7';
-						$database->save($array);
-						unset($array);
-
-					//revoke temporary permissions
-						$p->delete('menu_add', 'temp');
-
-					//add the menu items
-						$this->restore();
-				}
-				unset($sql, $parameters, $result, $row);
 		}
 
 		/**

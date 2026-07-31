@@ -254,7 +254,7 @@
 		$_SESSION['login']['destination']['text'] = (!empty($destination_query)) ? $destination_path.'?'.$destination_query : $destination_path;
 	}
 	else {
-		$_SESSION['login']['destination']['text'] = PROJECT_PATH."/core/dashboard/";
+		$_SESSION['login']['destination']['text'] = PROJECT_PATH."/dashboard";
 	}
 
 	if (!empty($_REQUEST['path'])) {

@@ -126,7 +126,7 @@
 		}
 
 		//redirect
-		header('Location: '.PROJECT_PATH.'/core/dashboard/');
+		header('Location: '.PROJECT_PATH.'/dashboard');
 		exit;
 	}
 

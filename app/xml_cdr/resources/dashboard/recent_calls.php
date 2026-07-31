@@ -173,22 +173,7 @@
 					$cdr_number = (is_numeric($row['destination_number'])) ? format_phone($row['destination_number']) : $row['destination_number'];
 					$dest = $row['destination_number'];
 				}
-			//set click-to-call variables
-				if (permission_exists('click_to_call_call')) {
-					$tr_link = "onclick=\"send_cmd('".PROJECT_PATH."/app/click_to_call/click_to_call.php".
-						"?src_cid_name=".urlencode($cdr_name ?? '').
-						"&src_cid_number=".urlencode($cdr_number ?? '').
-						"&dest_cid_name=".urlencode($_SESSION['user']['extension'][0]['outbound_caller_id_name'] ?? '').
-						"&dest_cid_number=".urlencode($_SESSION['user']['extension'][0]['outbound_caller_id_number'] ?? '').
-						"&src=".urlencode($_SESSION['user']['extension'][0]['user'] ?? '').
-						"&dest=".urlencode($dest ?? '').
-						"&rec=".(isset($_SESSION['click_to_call']['record']['boolean']) ? $_SESSION['click_to_call']['record']['boolean'] : "false").
-						"&ringback=".(isset($_SESSION['click_to_call']['ringback']['text']) ? $_SESSION['click_to_call']['ringback']['text'] : "us-ring").
-						"&auto_answer=".(isset($_SESSION['click_to_call']['auto_answer']['boolean']) ? $_SESSION['click_to_call']['auto_answer']['boolean'] : "true").
-						"');\" ".
-						"style='cursor: pointer;'";
-				}
-			echo "<tr ".$tr_link.">\n";
+			echo "<tr>\n";
 			//determine call result and appropriate icon
 				echo "<td valign='middle' class='".$row_style[$c]."' style='cursor: help; padding: 0 0 0 6px;'>\n";
 				if ($theme_cdr_images_exist) {
@@ -208,7 +193,7 @@
 					}
 				}
 				echo "</td>\n";
-				echo "<td valign='top' class='".$row_style[$c]." hud_text' nowrap='nowrap'><a href='javascript:void(0);' ".(!empty($cdr_name) ? "title=\"".$cdr_name."\"" : null).">".($cdr_number ?? '')."</a></td>\n";
+				echo "<td valign='top' class='".$row_style[$c]." hud_text' nowrap='nowrap' ".(!empty($cdr_name) ? "title=\"".$cdr_name."\"" : null).">".($cdr_number ?? '')."</td>\n";
 				echo "<td valign='top' class='".$row_style[$c]." hud_text' nowrap='nowrap'>".$start_date_time."</td>\n";
 			echo "</tr>\n";
 
