@@ -61,8 +61,12 @@
 	if (isset($_SESSION["username"])) {
 		if (isset($_SESSION['login']['destination']['url'])) {
 			header("Location: ".$_SESSION['login']['destination']['url']);
-		} else {
-			header("Location: ".PROJECT_PATH."/dashboard");
+		} elseif (file_exists($_SERVER["PROJECT_ROOT"]."/core/dashboard/app_config.php")) {
+			header("Location: ".PROJECT_PATH."/core/dashboard/");
+		}
+		else {
+			require_once "resources/header.php";
+			require_once "resources/footer.php";
 		}
 	}
 	else {

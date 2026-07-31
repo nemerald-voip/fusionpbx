@@ -68,7 +68,7 @@
 		$apps[$x]['default_settings'][$y]['default_setting_category'] = "domain";
 		$apps[$x]['default_settings'][$y]['default_setting_subcategory'] = "menu";
 		$apps[$x]['default_settings'][$y]['default_setting_name'] = "uuid";
-		$apps[$x]['default_settings'][$y]['default_setting_value'] = "";
+		$apps[$x]['default_settings'][$y]['default_setting_value'] = "b4750c3f-2a86-b00d-b7d0-345c14eca286";
 		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "true";
 		$apps[$x]['default_settings'][$y]['default_setting_description'] = "";
 		$y++;
@@ -300,7 +300,7 @@
 		$apps[$x]['default_settings'][$y]['default_setting_category'] = "login";
 		$apps[$x]['default_settings'][$y]['default_setting_subcategory'] = "destination";
 		$apps[$x]['default_settings'][$y]['default_setting_name'] = "text";
-		$apps[$x]['default_settings'][$y]['default_setting_value'] = "/dashboard";
+		$apps[$x]['default_settings'][$y]['default_setting_value'] = "/core/dashboard/";
 		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "false";
 		$apps[$x]['default_settings'][$y]['default_setting_description'] = "Destination after login";
 		$y++;

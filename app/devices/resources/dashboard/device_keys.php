@@ -71,7 +71,7 @@
 					$token = new token;
 					if (!$token->validate('/app/devices/resources/dashboard/device_keys.php') && !$token->validate('login')) {
 						message::add($text['message-invalid_token'],'negative');
-						header('Location: '.PROJECT_PATH."/dashboard");
+						header('Location: '.PROJECT_PATH."/core/dashboard/");
 						exit;
 					}
 
@@ -287,7 +287,7 @@
 					message::add($text["message-".$action]);
 
 				//redirect the browser
-					header("Location: /dashboard");
+					header("Location: /core/dashboard/");
 					exit;
 
 			}

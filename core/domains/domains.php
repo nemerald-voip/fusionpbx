@@ -74,7 +74,7 @@
 					header("Location: ".PROJECT_PATH.$_SESSION["login"]["destination"]["text"]);
 				}
 				else {
-					header("Location: ".PROJECT_PATH."/dashboard");
+					header("Location: ".PROJECT_PATH."/core/dashboard/");
 				}
 				exit;
 		}
