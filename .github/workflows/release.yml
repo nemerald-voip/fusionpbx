@@ -1,0 +1,110 @@
+name: Create GitHub Release
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate release version
+        id: release_version
+        run: |
+          set -euo pipefail
+
+          if ! version=$(node -e '
+            const fs = require("node:fs");
+
+            try {
+              const manifest = JSON.parse(fs.readFileSync("version.json", "utf8"));
+              process.stdout.write(typeof manifest.version === "string" ? manifest.version : "");
+            } catch {
+              process.exit(1);
+            }
+          '); then
+            echo "Error: version.json must contain valid JSON with a version string."
+            exit 1
+          fi
+
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: version.json must contain a stable semantic version such as 1.2.4."
+            exit 1
+          fi
+
+          release_tag="v$version"
+          tag_exists=false
+          if git rev-parse --verify --quiet "refs/tags/${release_tag}" >/dev/null; then
+            tag_exists=true
+            tagged_commit=$(git rev-list -n 1 "$release_tag")
+            if [[ "$tagged_commit" != "$GITHUB_SHA" ]]; then
+              echo "Error: $release_tag already belongs to commit $tagged_commit."
+              echo "Increase the version in version.json before pushing another release."
+              exit 1
+            fi
+          else
+            latest_tag=''
+            while IFS= read -r tag; do
+              if [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                latest_tag=$tag
+                break
+              fi
+            done < <(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname)
+
+            if [[ -n "$latest_tag" ]]; then
+              latest_version=${latest_tag#v}
+              if [[ "$(printf '%s\n%s\n' "$latest_version" "$version" | sort --version-sort | tail -n 1)" != "$version" \
+                || "$version" == "$latest_version" ]]; then
+                echo "Error: version $version must be greater than the latest release version $latest_version."
+                exit 1
+              fi
+            fi
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "tag_exists=$tag_exists" >> "$GITHUB_OUTPUT"
+
+      - name: Create release tag
+        if: steps.release_version.outputs.tag_exists == 'false'
+        env:
+          RELEASE_TAG: ${{ steps.release_version.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          git tag "$RELEASE_TAG" "$GITHUB_SHA"
+          if git push origin "refs/tags/${RELEASE_TAG}"; then
+            exit 0
+          fi
+
+          remote_commit=$(git ls-remote origin "refs/tags/${RELEASE_TAG}" | awk 'NR == 1 { print $1 }')
+          if [[ "$remote_commit" == "$GITHUB_SHA" ]]; then
+            echo "$RELEASE_TAG was created for this commit by another workflow run."
+            exit 0
+          fi
+
+          echo "Error: $RELEASE_TAG was created for another commit while this workflow was running."
+          echo "Increase the version in version.json and push a new commit."
+          exit 1
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2.6.2
+        with:
+          tag_name: ${{ steps.release_version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          make_latest: legacy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
