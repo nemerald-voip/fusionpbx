@@ -1,0 +1,5 @@
+<extension name="AI Agent Return" number="xfer.&lt;agent-uuid&gt;.&lt;extension&gt;" context="public" continue="false" app_uuid="7bc57f0c-00a2-4f72-9f41-7ebebc1c318c" global="true" enabled="true" order="100" destination="sip_req_user" description="Validates AI provider transfer targets and returns them to the owning account.">
+	<condition field="${sip_req_user}" expression="^xfer\.[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\.[0-9*#]+$">
+		<action application="lua" data="ai_agent_return.lua"/>
+	</condition>
+</extension>
