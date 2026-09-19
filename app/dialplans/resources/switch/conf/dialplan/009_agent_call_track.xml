@@ -1,0 +1,5 @@
+<extension name="agent-call-track" context="global" continue="true" app_uuid="82965d63-a03e-4e93-962c-364b68da080a" global="true" order="9">
+    <condition field="${fspbx_cc_agent_uuid}" expression="^[0-9a-fA-F-]{36}$">
+        <action application="lua" data="agent_call_track.lua caller"/>
+    </condition>
+</extension>
