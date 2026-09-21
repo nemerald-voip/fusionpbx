@@ -30,6 +30,7 @@
 		$apps[$x]['description']['uk-ua'] = "";
 
 	//default settings
+		// Generated credentials are saved only when their predefined setting UUID is missing.
 		$y=0;
 		$apps[$x]['default_settings'][$y]['default_setting_uuid'] = "931f9369-9aac-4620-8d4b-7d2bf642b1d2";
 		$apps[$x]['default_settings'][$y]['default_setting_category'] = "provision";
@@ -52,23 +53,23 @@
 		$apps[$x]['default_settings'][$y]['default_setting_subcategory'] = "http_auth_type";
 		$apps[$x]['default_settings'][$y]['default_setting_name'] = "text";
 		$apps[$x]['default_settings'][$y]['default_setting_value'] = "digest";
-		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "false";
+		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "true";
 		$apps[$x]['default_settings'][$y]['default_setting_description'] = "Options: basic, digest (default)";
 		$y++;
 		$apps[$x]['default_settings'][$y]['default_setting_uuid'] = "c6a5b05b-210d-484f-bbb6-c1dd2223992e";
 		$apps[$x]['default_settings'][$y]['default_setting_category'] = "provision";
 		$apps[$x]['default_settings'][$y]['default_setting_subcategory'] = "http_auth_username";
 		$apps[$x]['default_settings'][$y]['default_setting_name'] = "text";
-		$apps[$x]['default_settings'][$y]['default_setting_value'] = "";
-		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "false";
+		$apps[$x]['default_settings'][$y]['default_setting_value'] = generate_password(20, 3);
+		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "true";
 		$apps[$x]['default_settings'][$y]['default_setting_description'] = "";
 		$y++;
 		$apps[$x]['default_settings'][$y]['default_setting_uuid'] = "ed380d7d-b3b8-40b4-8528-f10d521ddef0";
 		$apps[$x]['default_settings'][$y]['default_setting_category'] = "provision";
 		$apps[$x]['default_settings'][$y]['default_setting_subcategory'] = "http_auth_password";
 		$apps[$x]['default_settings'][$y]['default_setting_name'] = "array";
-		$apps[$x]['default_settings'][$y]['default_setting_value'] = "";
-		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "false";
+		$apps[$x]['default_settings'][$y]['default_setting_value'] = generate_password(30, 3);
+		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "true";
 		$apps[$x]['default_settings'][$y]['default_setting_description'] = "";
 		$y++;
 		$apps[$x]['default_settings'][$y]['default_setting_uuid'] = "c998c762-6a43-4911-a465-a9653eeb793d";
@@ -92,15 +93,15 @@
 		$apps[$x]['default_settings'][$y]['default_setting_subcategory'] = "admin_name";
 		$apps[$x]['default_settings'][$y]['default_setting_name'] = "text";
 		$apps[$x]['default_settings'][$y]['default_setting_value'] = "admin";
-		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "false";
+		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "true";
 		$apps[$x]['default_settings'][$y]['default_setting_description'] = "";
 		$y++;
 		$apps[$x]['default_settings'][$y]['default_setting_uuid'] = "ae3f809e-81af-4ed4-82f7-275251210d3a";
 		$apps[$x]['default_settings'][$y]['default_setting_category'] = "provision";
 		$apps[$x]['default_settings'][$y]['default_setting_subcategory'] = "admin_password";
 		$apps[$x]['default_settings'][$y]['default_setting_name'] = "text";
-		$apps[$x]['default_settings'][$y]['default_setting_value'] = "";
-		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "false";
+		$apps[$x]['default_settings'][$y]['default_setting_value'] = generate_password(6, 1);
+		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "true";
 		$apps[$x]['default_settings'][$y]['default_setting_description'] = "";
 		$y++;
 		$apps[$x]['default_settings'][$y]['default_setting_uuid'] = "cd2173be-aa43-4fd2-9c75-02f49c199485";
