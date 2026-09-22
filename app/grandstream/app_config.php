@@ -266,9 +266,9 @@
 		$apps[$x]['default_settings'][$y]['default_setting_category'] = "provision";
 		$apps[$x]['default_settings'][$y]['default_setting_subcategory'] = "grandstream_stun_server";
 		$apps[$x]['default_settings'][$y]['default_setting_name'] = "text";
-		$apps[$x]['default_settings'][$y]['default_setting_value'] = "stun.counterpath.com";
-		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "true";
-		$apps[$x]['default_settings'][$y]['default_setting_description'] = "Bug in Grandstream where null stun_server defaults to sip server/port";
+		$apps[$x]['default_settings'][$y]['default_setting_value'] = "nat-a.gdms.cloud";
+		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "false";
+		$apps[$x]['default_settings'][$y]['default_setting_description'] = "STUN server for NAT traversal.  Default is nat-a.gdms.cloud";
 		$y++;
 		$apps[$x]['default_settings'][$y]['default_setting_uuid'] = "6dbe4a02-33a3-4c1d-9145-0b8d6a5b8c81";
 		$apps[$x]['default_settings'][$y]['default_setting_category'] = "provision";
