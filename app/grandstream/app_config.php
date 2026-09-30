@@ -1034,9 +1034,9 @@
 		$apps[$x]['default_settings'][$y]['default_setting_category'] = "provision";
 		$apps[$x]['default_settings'][$y]['default_setting_subcategory'] = "grandstream_system_ring";
 		$apps[$x]['default_settings'][$y]['default_setting_name'] = "text";
-		$apps[$x]['default_settings'][$y]['default_setting_value'] = "0";
+		$apps[$x]['default_settings'][$y]['default_setting_value'] = "f1=440,f2=480,c=200/400;";
 		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "false";
-		$apps[$x]['default_settings'][$y]['default_setting_description'] = "the system ringtone";
+		$apps[$x]['default_settings'][$y]['default_setting_description'] = "System ring tone frequencies and cadence (P345). Grandstream default: f1=440,f2=480,c=200/400;. This is a tone pattern, not a ringtone number.";
 		$y++;
 		$apps[$x]['default_settings'][$y]['default_setting_uuid'] = "de422ef9-feed-4c13-ab2a-0b68e86e3dee";
 		$apps[$x]['default_settings'][$y]['default_setting_category'] = "provision";
