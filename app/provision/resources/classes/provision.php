@@ -687,6 +687,11 @@
 							
                             require_once __DIR__ . '/../../../../../app/helpers.php';
 
+							//blank line display names follow the account's line_display_name_format
+							if (!empty($device_lines) && function_exists('fspbx_resolve_line_display_names')) {
+								$device_lines = fspbx_resolve_line_display_names($device_lines, (string) $domain_uuid, $provision['line_display_name_format'] ?? null);
+							}
+
 							//get the device profile keys
 							if (is_uuid($device_profile_uuid)) {
 								$sql = "select ";
