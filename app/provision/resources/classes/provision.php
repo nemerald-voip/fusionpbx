@@ -736,7 +736,7 @@
 								$database = new database;
 								$keys = $database->select($sql, $parameters, 'all');
 
-                                $blf_label_map = fspbx_prefetch_blf_labels($domain_uuid, $keys);
+                                $blf_label_map = fspbx_prefetch_blf_labels($domain_uuid, $keys, $provision['blf_label_format'] ?? null);
 
 								//add the profile keys to the device keys array
 								if (is_array($keys) && sizeof($keys) != 0) {
@@ -802,7 +802,7 @@
 							$database = new database;
 							$keys = $database->select($sql, $parameters, 'all');
 
-                            $blf_label_map = fspbx_prefetch_blf_labels($domain_uuid, $keys);
+                            $blf_label_map = fspbx_prefetch_blf_labels($domain_uuid, $keys, $provision['blf_label_format'] ?? null);
 
 						//override profile keys with the device keys
 							if (is_array($keys)) {
@@ -862,7 +862,7 @@
                                 $new_keys = [];
                             }
                             if ($has_new_keys || $has_template_keys) {
-                                fspbx_apply_new_keys_override($device_keys, $new_keys, $device_uuid, $device_vendor, $device_lines, $domain_uuid);
+                                fspbx_apply_new_keys_override($device_keys, $new_keys, $device_uuid, $device_vendor, $device_lines, $domain_uuid, $provision['blf_label_format'] ?? null);
                             }
                             unset($has_new_keys, $has_template_keys);
                             unset($new_keys);
