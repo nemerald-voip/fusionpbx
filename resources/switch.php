@@ -947,12 +947,6 @@ if (!function_exists('save_switch_xml')) {
 			if (file_exists($_SERVER["PROJECT_ROOT"]."/app/settings/app_config.php")) {
 				save_setting_xml();
 			}
-			if (file_exists($_SERVER["PROJECT_ROOT"]."/app/modules/app_config.php")) {
-				require_once $_SERVER["DOCUMENT_ROOT"].PROJECT_PATH."/app/modules/resources/classes/modules.php";
-				$module = new modules;
-				$module->xml();
-				//$msg = $module->msg;
-			}
 			if (file_exists($_SERVER["PROJECT_ROOT"]."/app/vars/app_config.php")) {
 				save_var_xml();
 			}

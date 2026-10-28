@@ -542,8 +542,8 @@
 		echo "	</tr>\n";
 
 		$memcache_fail = false;
-		$mod = new modules;
-		if ($mod -> active("mod_memcache")) {
+		$memcache_module = event_socket::api('module_exists mod_memcache');
+		if (is_string($memcache_module) && trim($memcache_module) === 'true') {
 			$fp = event_socket_create();
 			if ($fp) {
 				$switch_cmd = "memcache status verbose";
