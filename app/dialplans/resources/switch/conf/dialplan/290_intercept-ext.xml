@@ -5,6 +5,6 @@
 	</condition>
 	<condition field="destination_number" expression="^\*\*$"/>
 	<condition field="${sip_h_X-intercept_uuid}" expression="^(.+)$" break="on-true">
-		<action application="intercept" data="$1"/>
+		<action application="lua" data="intercept.lua"/>
 	</condition>
 </extension>
